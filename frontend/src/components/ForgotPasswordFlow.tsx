@@ -34,6 +34,7 @@ export type ResetStep = 'email' | 'verify-otp' | 'new-password';
 interface ForgotPasswordFlowProps {
     initialStep?: ResetStep;
     initialEmail?: string;
+    onStepChange?: (step: ResetStep) => void;
     onBackToSignIn: () => void;
     lang: Language;
     toggleLanguage: () => void;
@@ -44,6 +45,7 @@ interface ForgotPasswordFlowProps {
 export default function ForgotPasswordFlow({
     initialStep = 'email',
     initialEmail = '',
+    onStepChange,
     onBackToSignIn,
     lang,
     toggleLanguage,
@@ -62,6 +64,10 @@ export default function ForgotPasswordFlow({
     const [successMsg, setSuccessMsg] = useState('');
 
     const { t } = useTranslation();
+
+    React.useEffect(() => {
+        setStep(initialStep);
+    }, [initialStep]);
 
     // PDF Password validation rules (same DTO as Sign Up password)
     const hasMinLength = newPassword.length >= 8;
@@ -106,6 +112,7 @@ export default function ForgotPasswordFlow({
             });
             setSuccessMsg(res.message);
             setStep('verify-otp');
+            onStepChange?.('verify-otp');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to send OTP.');
         } finally {
@@ -136,6 +143,7 @@ export default function ForgotPasswordFlow({
             if (res.verified) {
                 setSuccessMsg(res.message);
                 setStep('new-password');
+                onStepChange?.('new-password');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Invalid or expired OTP.');

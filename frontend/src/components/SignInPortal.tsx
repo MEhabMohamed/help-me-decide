@@ -41,6 +41,8 @@ declare global {
 }
 
 interface SignInPortalProps {
+    isSignUp: boolean;
+    onToggleMode: (nextIsSignUp: boolean) => void;
     onAuthSuccess: (token: string, user: UserResponseDTO) => void;
     onForgotPassword: () => void;
     lang: Language;
@@ -50,6 +52,8 @@ interface SignInPortalProps {
 }
 
 export default function SignInPortal({
+    isSignUp,
+    onToggleMode,
     onAuthSuccess,
     onForgotPassword,
     lang,
@@ -57,7 +61,6 @@ export default function SignInPortal({
     themeMode,
     cycleTheme,
 }: SignInPortalProps) {
-    const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
@@ -441,7 +444,7 @@ export default function SignInPortal({
                         type="button"
                         className="auth-toggle-link"
                         onClick={() => {
-                            setIsSignUp(!isSignUp);
+                            onToggleMode(!isSignUp);
                             setError('');
                         }}
                     >

@@ -47,6 +47,7 @@ export default function App() {
         (localStorage.getItem('currency') as CurrencyCode) || 'USD'
     );
     const [authView, setAuthView] = useState<'signin' | 'forgot'>('signin');
+    const [isSignUp, setIsSignUp] = useState<boolean>(false);
     const [resetInitialStep, setResetInitialStep] = useState<ResetStep>('email');
     const [resetInitialEmail, setResetInitialEmail] = useState<string>('');
 
@@ -58,17 +59,73 @@ export default function App() {
     const [authLoading, setAuthLoading] = useState<boolean>(!!token);
     const [seenIds, setSeenIds] = useState<string[]>([]);
 
-    // Check URL query params for password reset redirect link (?view=verify-otp&email=...)
+    // Parse initial URL pathname & query params (and support browser Back/Forward navigation)
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const viewParam = params.get('view');
-        const emailParam = params.get('email') || '';
-        if (viewParam === 'verify-otp' || viewParam === 'forgot-password') {
-            setAuthView('forgot');
-            setResetInitialStep(viewParam === 'verify-otp' ? 'verify-otp' : 'email');
-            setResetInitialEmail(emailParam);
-        }
+        const syncStateFromLocation = () => {
+            const path = window.location.pathname.replace(/\/+$/, '') || '/';
+            const params = new URLSearchParams(window.location.search);
+            const viewParam = params.get('view');
+            const emailParam = params.get('email') || '';
+
+            if (emailParam) {
+                setResetInitialEmail(emailParam);
+            }
+
+            if (viewParam === 'verify-otp' || path.endsWith('/auth/verify-otp')) {
+                setAuthView('forgot');
+                setResetInitialStep('verify-otp');
+            } else if (viewParam === 'forgot-password' || path.endsWith('/auth/forgot-password')) {
+                setAuthView('forgot');
+                setResetInitialStep('email');
+            } else if (path.endsWith('/auth/reset-password')) {
+                setAuthView('forgot');
+                setResetInitialStep('new-password');
+            } else if (path.endsWith('/auth/register')) {
+                setAuthView('signin');
+                setIsSignUp(true);
+            } else if (path.endsWith('/auth/login')) {
+                setAuthView('signin');
+                setIsSignUp(false);
+            } else if (path.endsWith('/history')) {
+                setActiveTab('history');
+            } else if (path.endsWith('/recommend')) {
+                setActiveTab('recommend');
+            }
+        };
+
+        syncStateFromLocation();
+        window.addEventListener('popstate', syncStateFromLocation);
+        return () => window.removeEventListener('popstate', syncStateFromLocation);
     }, []);
+
+    // Keep browser URL synced with the active section's corresponding endpoint
+    useEffect(() => {
+        if (authLoading) return;
+
+        let targetPath: string;
+        if (!token) {
+            if (authView === 'forgot') {
+                targetPath =
+                    resetInitialStep === 'verify-otp'
+                        ? '/auth/verify-otp'
+                        : resetInitialStep === 'new-password'
+                          ? '/auth/reset-password'
+                          : '/auth/forgot-password';
+            } else {
+                targetPath = isSignUp ? '/auth/register' : '/auth/login';
+            }
+        } else {
+            targetPath = activeTab === 'history' ? '/history' : '/recommend';
+        }
+
+        if (window.location.pathname !== targetPath) {
+            const search =
+                !token && authView === 'forgot' && resetInitialStep === 'verify-otp'
+                    ? window.location.search
+                    : '';
+            window.history.pushState({}, '', `${targetPath}${search}`);
+        }
+    }, [token, authLoading, authView, isSignUp, resetInitialStep, activeTab]);
 
     // Apply language & RTL/LTR direction via i18next
     useEffect(() => {
@@ -231,8 +288,10 @@ export default function App() {
                 <ForgotPasswordFlow
                     initialStep={resetInitialStep}
                     initialEmail={resetInitialEmail}
+                    onStepChange={(nextStep) => setResetInitialStep(nextStep)}
                     onBackToSignIn={() => {
                         setAuthView('signin');
+                        setIsSignUp(false);
                         setResetInitialStep('email');
                     }}
                     lang={lang}
@@ -245,6 +304,8 @@ export default function App() {
 
         return (
             <SignInPortal
+                isSignUp={isSignUp}
+                onToggleMode={(nextIsSignUp) => setIsSignUp(nextIsSignUp)}
                 onAuthSuccess={handleAuthSuccess}
                 onForgotPassword={() => {
                     setResetInitialStep('email');
@@ -262,10 +323,11 @@ export default function App() {
         <div className="app-container">
             <header className="app-header">
                 <a
-                    href="/"
+                    href="/recommend"
                     className="brand"
                     onClick={(e) => {
                         e.preventDefault();
+                        setActiveTab('recommend');
                         handleResetRecommendation();
                     }}
                 >

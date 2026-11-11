@@ -30,6 +30,7 @@ After inspecting `core-service`, `analytics-service`, and `what-toeat-app`, the 
 help-me-decide/
 ├── .gitignore                        # Ignores node_modules/, dist/, .env*, and play/
 ├── README.md                         # Setup, dependencies, local MongoDB & .env guide
+├── CURL_ENDPOINTS.md                 # Complete group of Postman-ready cURL commands for all endpoints
 ├── AI.md                             # AI Usage & Engineering Report
 ├── play/                             # Internal live DB & E2E integration tests (gitignored)
 │   ├── test-db-connection.ts
@@ -234,3 +235,24 @@ During plan revisions and code reviews, several important engineering adjustment
       - Removed unused exports and properties across the backend: `UnAuthorisedError` in `backend/src/lib/auth/errors.ts`, `CACHE_PROVIDER` in `backend/src/lib/cache/init.ts`, unused status codes in `backend/src/lib/http/response.ts`, and the unused `private readonly` modifier on `config` in `backend/src/pkg/cache/redis.ts`.
       - Removed the unused `lang` prop and `Language` import from `frontend/src/components/QuestionLoop.tsx` (and its call site in `frontend/src/App.tsx`), as well as the unused `GoogleAuthRequestDTO` interface in `frontend/src/types/api.dto.ts`.
       - Enabled `"noUnusedLocals": true` and `"noUnusedParameters": true` in both `backend/tsconfig.json` and `frontend/tsconfig.json` to prevent unused code or imports at compile time.
+
+13. **Browser URL Synchronization with Active Section Endpoints & Postman `CURL_ENDPOINTS.md`**:
+    - *User Review Adjustment*:
+      > *"first I want the corresponding endpoint to be shown in the url in the browser, when switching between different sections, also I want a file with a group of cURL having all the app endpoints with the corresponding methods to try them on postman."*
+    - *Adjustment*:
+      - Synchronized the browser URL path (`window.history.pushState` and `popstate` listener) in `frontend/src/App.tsx`, `SignInPortal.tsx`, and `ForgotPasswordFlow.tsx` so switching between any section updates the browser address bar to its corresponding endpoint:
+        - Sign In -> `/auth/login`
+        - Sign Up -> `/auth/register`
+        - Forgot Password (Email step) -> `/auth/forgot-password`
+        - Verify OTP step -> `/auth/verify-otp`
+        - Reset Password (New/Confirm Password step) -> `/auth/reset-password`
+        - Cooking Recommender section -> `/recommend`
+        - Saved History section -> `/history`
+      - Created `CURL_ENDPOINTS.md` containing a complete collection of Postman-ready `cURL` commands for every endpoint and HTTP method (`GET /api/health`, `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/google`, `POST /api/auth/forgot-password`, `POST /api/auth/verify-otp`, `POST /api/auth/reset-password`, `POST /api/auth/refresh`, `GET /api/auth/me`, `POST /api/auth/logout`, `GET /api/users/me`, `PATCH /api/users/me`, `DELETE /api/users/me`, `POST /api/recommend`, `POST /api/history`, `GET /api/history`, and `DELETE /api/history/:id`).
+
+14. **Gender-Inclusive Dual-Form Arabic Addressing (`ضع/ضعي`, `أضف/أضيفي`, etc.)**:
+    - *User Review Adjustment*:
+      > *"second in the arabic version, the recipe is always having a female projection as if it is only speaking to females, but I want it to be adjusted to be like an example ضع/ضعي so both male and female projections are included."*
+    - *Adjustment*:
+      - Implemented `formatInclusiveArabicInstructions` in `backend/src/app/cooking/service/cooking.service.ts` to normalize translated Arabic cooking instructions so imperative verbs include both masculine and feminine projections (e.g., `ضع/ضعي`, `أضف/أضيفي`, `سخن/سخني`, `قلب/قلبي`, `اخلط/اخلطي`, `قدم/قدمي`, `اترك/اتركي`, `قطع/قطعي`, `تبل/تبلي`, `غط/غطي`).
+      - Updated the Arabic locale bundle (`frontend/src/i18n/locales/ar.json`) across UI prompts and buttons to use gender-inclusive dual forms (e.g., `سجل/سجلي`, `اكتب/اكتبي`, `اعرض/اعرضي`, `احفظ/احفظي`, `شوف/شوفي`, `جرب/جربي`).

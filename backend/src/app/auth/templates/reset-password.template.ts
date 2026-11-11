@@ -2,7 +2,7 @@ import { env } from '../../../lib/config/env';
 
 export function passwordResetEmail(name: string, email: string, otp: string) {
     const subject = 'Help Me Decide — Password Reset OTP & Verification Link';
-    const redirectLink = `${env.frontendUrl}/?view=verify-otp&email=${encodeURIComponent(email)}`;
+    const redirectLink = `${env.frontendUrl}/auth/verify-otp?email=${encodeURIComponent(email)}`;
 
     const template = `
     <html>

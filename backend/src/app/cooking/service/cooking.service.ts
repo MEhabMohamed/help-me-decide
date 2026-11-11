@@ -266,12 +266,145 @@ interface MealDbSummary {
     strMealThumb?: string;
 }
 
+const INCLUSIVE_ARABIC_IMPERATIVE_PAIRS: Array<[string, string]> = [
+    ['ضع', 'ضعي'],
+    ['أضف', 'أضيفي'],
+    ['اضف', 'اضيفي'],
+    ['سخن', 'سخني'],
+    ['سخّن', 'سخّني'],
+    ['قلب', 'قلبي'],
+    ['قلّب', 'قلّبي'],
+    ['حرك', 'حركي'],
+    ['حرّك', 'حرّكي'],
+    ['اطه', 'اطهي'],
+    ['اطبخ', 'اطبخي'],
+    ['اخفق', 'اخفقي'],
+    ['امزج', 'امزجي'],
+    ['اخلط', 'اخلطي'],
+    ['تبل', 'تبلي'],
+    ['تبّل', 'تبّلي'],
+    ['اترك', 'اتركي'],
+    ['اتركه', 'اتركيه'],
+    ['اتركها', 'اتركيها'],
+    ['قدم', 'قدمي'],
+    ['قدّم', 'قدّمي'],
+    ['قدمه', 'قدميه'],
+    ['قدمها', 'قدميها'],
+    ['قدّمه', 'قدّميه'],
+    ['قدّمها', 'قدّميها'],
+    ['قطع', 'قطعي'],
+    ['قطّع', 'قطّعي'],
+    ['افرم', 'افرمي'],
+    ['ابشر', 'ابشري'],
+    ['قشر', 'قشري'],
+    ['قشّر', 'قشّري'],
+    ['اغسل', 'اغسلي'],
+    ['اشطف', 'اشطفي'],
+    ['صف', 'صفي'],
+    ['صفّ', 'صفّي'],
+    ['صفيه', 'صفيها'],
+    ['اسلق', 'اسلقي'],
+    ['اشو', 'اشوي'],
+    ['اقل', 'اقلي'],
+    ['حمر', 'حمري'],
+    ['حمّر', 'حمّري'],
+    ['حمص', 'حمصي'],
+    ['حمّص', 'حمّصي'],
+    ['اخبز', 'اخبزي'],
+    ['ادهن', 'ادهني'],
+    ['رش', 'رشي'],
+    ['رشّ', 'رشّي'],
+    ['غط', 'غطي'],
+    ['غطّ', 'غطّي'],
+    ['غطه', 'غطيه'],
+    ['غطها', 'غطيها'],
+    ['انقع', 'انقعي'],
+    ['ذوب', 'ذوبي'],
+    ['ذوّب', 'ذوّبي'],
+    ['اهرس', 'اهرسي'],
+    ['اسكب', 'اسكبي'],
+    ['صب', 'صبي'],
+    ['صبّ', 'صبّي'],
+    ['رتب', 'رتبي'],
+    ['رتّب', 'رتّبي'],
+    ['زين', 'زيني'],
+    ['زيّن', 'زيّني'],
+    ['احرص', 'احرصي'],
+    ['تأكد', 'تأكدي'],
+    ['استمر', 'استمري'],
+    ['أخرج', 'أخرجي'],
+    ['اخرج', 'اخرجي'],
+    ['أدخل', 'أدخلي'],
+    ['ادخل', 'ادخلي'],
+    ['أشعل', 'أشعلي'],
+    ['اشعل', 'اشعلي'],
+    ['أطفئ', 'أطفئي'],
+    ['اطفئ', 'اطفئي'],
+    ['خفف', 'خففي'],
+    ['خفّف', 'خفّفي'],
+    ['ارفع', 'ارفعي'],
+    ['اقلب', 'اقلبي'],
+    ['افرد', 'افردي'],
+    ['وزع', 'وزعي'],
+    ['وزّع', 'وزّعي'],
+    ['احتفظ', 'احتفظي'],
+    ['استخدم', 'استخدمي'],
+    ['استعمل', 'استعملي'],
+    ['جفف', 'جففي'],
+    ['جفّف', 'جفّفي'],
+    ['تخلص', 'تخلصي'],
+    ['تخلّص', 'تخلّصي'],
+    ['أزل', 'أزيلي'],
+    ['ازل', 'ازيلي'],
+    ['انزع', 'انزعي'],
+    ['اكشف', 'اكشفي'],
+    ['كرر', 'كرري'],
+    ['كرّر', 'كرّري'],
+    ['أعد', 'أعيدي'],
+    ['اعد', 'اعيدي'],
+    ['انقل', 'انقلي'],
+    ['قسم', 'قسمي'],
+    ['قسّم', 'قسّمي'],
+    ['شكل', 'شكلي'],
+    ['شكّل', 'شكّلي'],
+    ['عجن', 'اعجني'],
+    ['اعجن', 'اعجني'],
+    ['افصل', 'افصلي'],
+    ['حضّر', 'حضّري'],
+    ['حضر', 'حضري'],
+    ['جهز', 'جهزي'],
+    ['جهّز', 'جهّزي'],
+];
+
+export function formatInclusiveArabicInstructions(text: string): string {
+    if (!text || !text.trim()) return text;
+    let formatted = text;
+
+    for (const [masc, fem] of INCLUSIVE_ARABIC_IMPERATIVE_PAIRS) {
+        const pair = `${masc}/${fem}`;
+        // Match either the standalone masculine or standalone feminine imperative (with optional ف or و prefix)
+        // when not already part of a slash pair like ضع/ضعي
+        const pattern = new RegExp(
+            `(?<![\\u0600-\\u06FF/])([وف]?)(?:${fem}|${masc})(?![\\u0600-\\u06FF/])`,
+            'g'
+        );
+        formatted = formatted.replace(pattern, (_match, prefix: string) => {
+            if (prefix) {
+                return `${prefix}${masc}/${prefix}${fem}`;
+            }
+            return pair;
+        });
+    }
+
+    return formatted;
+}
+
 @Injectable()
 export class CookingService {
     constructor(@Inject(MealHistoryRepository) private readonly historyRepo: MealHistoryRepository) { }
 
     private async buildLocalizedResponse(detailEn: RecipeDetails): Promise<RecommendResponseDTO> {
-        const [nameAr, categoryAr, areaAr, instructionsAr, ingredientsAr, measurementsAr] =
+        const [nameAr, categoryAr, areaAr, rawInstructionsAr, ingredientsAr, measurementsAr] =
             await Promise.all([
                 translateText(detailEn.name, 'ar'),
                 translateText(detailEn.category, 'ar'),
@@ -280,6 +413,8 @@ export class CookingService {
                 translateArray(detailEn.ingredients, 'ar'),
                 translateArray(detailEn.measurements, 'ar'),
             ]);
+
+        const instructionsAr = formatInclusiveArabicInstructions(rawInstructionsAr);
 
         const detailAr: RecipeDetails = {
             ...detailEn,
