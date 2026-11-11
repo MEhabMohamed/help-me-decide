@@ -7,7 +7,7 @@ This document details how AI assistance (Google Antigravity) was used to design,
 ## 1. Initial Prompting & Reference-Driven Foundation
 
 The application was built by first instructing the AI to read the assignment PDF specification, form an `implementation_plan.md` for review before writing code, and synthesize existing production patterns from three prior projects:
-- **`dir\quickbite\core-service`** (Express + TypeScript authentication, security middleware, helpers, guards, error handling, time utilities, and idempotency)
+- **`dir\quickbite\core-service`** (Express + TypeScript authentication, security middleware, helpers, guards, error handling, and time utilities)
 - **`dir\what-toeat-app`** (Google OAuth2 sign-in flow and smart recipe recommendation questionnaire)
 - **`dir\quickbite\analytics-service`** (MongoDB connection pooling and idempotent index lifecycle)
 
@@ -47,9 +47,6 @@ help-me-decide/
 │       ├── main.ts                   # NestJS bootstrap + core-service app.use middleware stack
 │       ├── app.module.ts             # Root NestJS module
 │       ├── pkg/                      # Strictly app-independent, reusable packages (no app/env imports)
-│       │   ├── cache/
-│       │   │   ├── cache.interface.ts
-│       │   │   └── redis.ts          # RedisCacheProvider (ioredis) matching core-service
 │       │   ├── email/
 │       │   │   ├── email.interface.ts
 │       │   │   └── nodemailer.ts
@@ -61,8 +58,6 @@ help-me-decide/
 │       │   ├── auth/
 │       │   │   ├── errors.ts
 │       │   │   └── guard.ts          # JwtAuthGuard (Cookie + Bearer token support)
-│       │   ├── cache/
-│       │   │   └── init.ts           # RedisCacheProvider initialization with env.redis
 │       │   ├── config/
 │       │   │   └── env.ts            # Zod-validated environment configuration
 │       │   ├── correlation/
@@ -74,8 +69,6 @@ help-me-decide/
 │       │   │   └── errorHandler.filter.ts
 │       │   ├── http/
 │       │   │   └── response.ts       # Standardized sendSuccess & httpStatus helpers
-│       │   ├── idempotency/
-│       │   │   └── idempotency.ts    # Idempotency-Key HTTP middleware (using toSec.day(1))
 │       │   ├── logger/
 │       │   │   └── logger.ts         # Structured JSON logger
 │       │   ├── mongo/
@@ -150,7 +143,7 @@ help-me-decide/
 ## 3. Which Parts of the Code Were AI-Assisted
 
 1. **Cross-Project Adaptation into NestJS & React TypeScript**:
-   - Ported `core-service`'s authentication flows, JWT/cookie utilities, `AppError`, `correlationId`, `idempotency`, `NodemailerProvider`, and `times.ts` into a modular NestJS backend.
+   - Ported `core-service`'s authentication flows, JWT/cookie utilities, `AppError`, `correlationId`, `NodemailerProvider`, and `times.ts` into a modular NestJS backend.
    - Ported `analytics-service`'s MongoDB connection pool (`pkg/mongo/client.ts`) and startup index creation (`lib/mongo/mongo.module.ts`) to Node.js/TypeScript.
    - Ported `what-toeat-app`'s Google OAuth2 login and TheMealDB cooking recommendation engine into strict TypeScript services and React components.
 2. **DTOs & Validation Decorators**:
@@ -205,10 +198,10 @@ During plan revisions and code reviews, several important engineering adjustment
      > *"do not use modules that export app code inside pkg, pkg should be independent where it can used on any app regardless, so this MongoLifeCycle should be transferred to lib"* (on `export class MongoLifecycle implements OnModuleInit, OnModuleDestroy`).
    - *Adjustment*: Refactored `backend/src/pkg/mongo/client.ts` into a pure, framework-agnostic connection wrapper (`MongoConnection`) with zero application, environment, logger, or NestJS dependencies so it can be dropped into any project. Transferred `MongoLifecycle`, `MongoModule`, `MONGO_CLIENT`, `MONGO_DB`, `Collections`, and `ensureIndexes()` into `backend/src/lib/mongo/mongo.module.ts`.
 
-8. **Redis Caching for HTTP Request Idempotency (`pkg/cache/redis.ts`, `lib/cache/init.ts`, `lib/idempotency/idempotency.ts`)**:
-   - *Inline Code Review Comment on `memory-cache.ts`*:
-     > *"this is dummy caching using a coding Map, this shouldn't be like this, use redis for caching just like core-service, and add the adjustment to AI.md"* (on `private readonly store = new Map<string, CacheEntry>();`).
-   - *Adjustment*: Deleted `memory-cache.ts` and replaced it with `RedisCacheProvider` (`backend/src/pkg/cache/redis.ts` using `ioredis`), configured via `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` in `backend/src/lib/config/env.ts` and initialized in `backend/src/lib/cache/init.ts` identically to `core-service`. `idempotency.ts` caches `2xx` responses in Redis for `toSec.day(1)`.
+8. **Removing Idempotency & Caching Implementation**:
+   - *User Review Adjustment*:
+     > *"I want to remove the idempotency and redis caching implementation"*.
+   - *Adjustment*: Removed the caching and HTTP idempotency layers (`pkg/cache`, `lib/cache`, `lib/idempotency`, `ioredis` dependency, `REDIS_*` environment variables, and client `Idempotency-Key` headers), keeping the backend and frontend lightweight and relying solely on local MongoDB (`uq_users_email` unique index and `idx_password_resets_ttl` TTL index) without requiring an external Redis server.
 
 9. **Replacing Hardcoded Translations with `i18next` & `react-i18next`**:
    - *User Review Adjustment*:
@@ -232,7 +225,7 @@ During plan revisions and code reviews, several important engineering adjustment
       > *"where is this used?"* (on `export function authenticate(req: Request, _res: Response, next: NextFunction)`).
     - *Adjustment*:
       - Removed the unused Express `authenticate` function and its unused `NextFunction` / `Response` imports from `backend/src/lib/auth/guard.ts` (since all NestJS controllers use `@UseGuards(JwtAuthGuard)`).
-      - Removed unused exports and properties across the backend: `UnAuthorisedError` in `backend/src/lib/auth/errors.ts`, `CACHE_PROVIDER` in `backend/src/lib/cache/init.ts`, unused status codes in `backend/src/lib/http/response.ts`, and the unused `private readonly` modifier on `config` in `backend/src/pkg/cache/redis.ts`.
+      - Removed unused exports and properties across the backend (`UnAuthorisedError` in `backend/src/lib/auth/errors.ts`, unused status codes in `backend/src/lib/http/response.ts`).
       - Removed the unused `lang` prop and `Language` import from `frontend/src/components/QuestionLoop.tsx` (and its call site in `frontend/src/App.tsx`), as well as the unused `GoogleAuthRequestDTO` interface in `frontend/src/types/api.dto.ts`.
       - Enabled `"noUnusedLocals": true` and `"noUnusedParameters": true` in both `backend/tsconfig.json` and `frontend/tsconfig.json` to prevent unused code or imports at compile time.
 

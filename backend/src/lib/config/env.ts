@@ -14,9 +14,6 @@ const schema = z.object({
     FRONTEND_URL: z.string(),
     MONGO_URI: z.string(),
     MONGO_DB: z.string(),
-    REDIS_HOST: z.string(),
-    REDIS_PORT: z.string(),
-    REDIS_PASSWORD: z.string().optional().default(''),
     ACCESS_SECRET: z.string(),
     REFRESH_SECRET: z.string(),
     ACCESS_EXPIRES_IN: z.string().default(String(toSec.hour(1))),
@@ -38,11 +35,6 @@ export const env = {
     mongo: {
         uri: parsed.MONGO_URI,
         dbName: parsed.MONGO_DB,
-    },
-    redis: {
-        host: parsed.REDIS_HOST,
-        port: Number(parsed.REDIS_PORT),
-        password: parsed.REDIS_PASSWORD,
     },
     jwt: {
         accessSecret: parsed.ACCESS_SECRET,

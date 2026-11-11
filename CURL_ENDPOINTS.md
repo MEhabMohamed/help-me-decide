@@ -24,7 +24,6 @@ Creates a new user account (Name >= 3 chars, valid Email, Password >= 8 chars wi
 ```bash
 curl --location --request POST 'http://localhost:5000/api/auth/register' \
 --header 'Content-Type: application/json' \
---header 'Idempotency-Key: register-req-001' \
 --data-raw '{
   "name": "Ahmed Mohamed",
   "email": "ahmed.mohamed@example.com",
@@ -63,12 +62,10 @@ curl --location --request POST 'http://localhost:5000/api/auth/google' \
 
 ### 2.4 Forgot Password (Step 1: Verify Email & Send 6-Digit OTP) — `POST /api/auth/forgot-password`
 Verifies that the email belongs to an existing user, stores a hashed 6-digit OTP in MongoDB, and sends an email with the OTP and redirect link (`/auth/verify-otp?email=...`).
-*(Requires `Idempotency-Key` header — strict idempotency enforced via Redis).*
 
 ```bash
 curl --location --request POST 'http://localhost:5000/api/auth/forgot-password' \
 --header 'Content-Type: application/json' \
---header 'Idempotency-Key: forgot-pwd-req-001' \
 --data-raw '{
   "email": "ahmed.mohamed@example.com"
 }'
@@ -154,7 +151,6 @@ curl --location --request GET 'http://localhost:5000/api/users/me' \
 curl --location --request PATCH 'http://localhost:5000/api/users/me' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <ACCESS_TOKEN>' \
---header 'Idempotency-Key: update-profile-001' \
 --data-raw '{
   "name": "Ahmed M. Updated",
   "avatarUrl": "https://example.com/avatar.png"
@@ -216,13 +212,12 @@ curl --location --request POST 'http://localhost:5000/api/recommend' \
 ---
 
 ### 4.3 Save Recipe Recommendation to History — `POST /api/history`
-Saves a recipe recommendation to the user's history in MongoDB (`meal_history`). Sending the same `Idempotency-Key` deduplicates repeated requests via Redis.
+Saves a recipe recommendation to the user's history in MongoDB (`meal_history`).
 
 ```bash
 curl --location --request POST 'http://localhost:5000/api/history' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <ACCESS_TOKEN>' \
---header 'Idempotency-Key: save-history-52772-25USD' \
 --data-raw '{
   "dietaryRestrictions": "None",
   "allergies": "None",

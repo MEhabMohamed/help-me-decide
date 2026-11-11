@@ -57,12 +57,8 @@ export default function ResultCard({
                 recommendationDetails: recommendation,
             };
 
-            const idempotencyKey = `save-history-${recommendation.recipe.en.id}-${quizAnswers.budget.replace(/\s+/g, '')}`;
             await apiRequest<HistoryItemResponseDTO>('/history', {
                 method: 'POST',
-                headers: {
-                    'Idempotency-Key': idempotencyKey,
-                },
                 body: JSON.stringify(dto),
             });
 

@@ -43,8 +43,8 @@ help-me-decide/
 │   ├── .env.example
 │   ├── package.json
 │   ├── src/
-│   │   ├── pkg/              # App-independent packages: Mongo client, Redis cache (ioredis), Nodemailer SMTP, time utils (toMs/toSec)
-│   │   ├── lib/              # App infrastructure: MongoModule & MongoLifecycle, Redis init, Idempotency, Env, Logger, AuthGuard, cookies
+│   │   ├── pkg/              # App-independent packages: Mongo client, Nodemailer SMTP, time utils (toMs/toSec)
+│   │   ├── lib/              # App infrastructure: MongoModule & MongoLifecycle, Env, Logger, AuthGuard, cookies
 │   │   └── app/              # Domain modules: auth/, user/, cooking/, health/ (with Request & Response DTOs)
 │   └── play/                 # Internal live DB & E2E endpoint tests (gitignored)
 └── frontend/                 # Vite + React + TypeScript SPA (Port 5173)
@@ -74,7 +74,7 @@ Or if installing packages manually from scratch:
 
 ```bash
 # Production Dependencies
-npm install @nestjs/common @nestjs/core @nestjs/platform-express bcrypt class-transformer class-validator cookie-parser cors dotenv express helmet ioredis jsonwebtoken mongodb nodemailer reflect-metadata rxjs uuid zod
+npm install @nestjs/common @nestjs/core @nestjs/platform-express bcrypt class-transformer class-validator cookie-parser cors dotenv express helmet jsonwebtoken mongodb nodemailer reflect-metadata rxjs uuid zod
 
 # Development & Type Dependencies
 npm install -D @types/bcrypt @types/cookie-parser @types/cors @types/express @types/jsonwebtoken @types/node @types/nodemailer ts-node tsx typescript
@@ -84,7 +84,6 @@ npm install -D @types/bcrypt @types/cookie-parser @types/cors @types/express @ty
 | :--- | :--- |
 | `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express`, `express`, `reflect-metadata`, `rxjs` | Core NestJS framework, decorators, guards, DI container, and Express HTTP adapter |
 | `mongodb` | Official MongoDB Node.js driver (connection pooling, ping check, idempotent index creation) |
-| `ioredis` | Redis client for caching and HTTP `Idempotency-Key` request deduplication |
 | `bcrypt` | Password hashing and verification (`SALT_ROUNDS = 10`) |
 | `jsonwebtoken` | Signing and verifying JWT Access (`ACCESS_SECRET`) and Refresh (`REFRESH_SECRET`) tokens |
 | `class-validator`, `class-transformer` | Request DTO validation decorators (`@IsEmail`, `@MinLength`, `@IsPdfCompliantPassword`, etc.) and class transformation |
@@ -137,21 +136,17 @@ cp frontend/.env.example frontend/.env
 
 Below is the step-by-step guide to obtaining each credential from its official provider:
 
-### 1. Local MongoDB & Redis Configuration (`MONGO_URI`, `MONGO_DB`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`)
-1. Ensure a local **MongoDB Community Server** (`mongodb://localhost:27017`) and **Redis Server** (`localhost:6379`) are running:
-   - **Windows / macOS / Linux Service**: Ensure your local `mongod` (`27017`) and `redis-server` (`6379`) services are started.
+### 1. Local MongoDB Configuration (`MONGO_URI`, `MONGO_DB`)
+1. Ensure a local **MongoDB Community Server** (or Docker container) is running on `mongodb://localhost:27017`:
+   - **Windows / macOS / Linux Service**: Ensure your local `mongod` (`27017`) service is started.
    - **Or via Docker**:
      ```bash
      docker run -d --name mongodb -p 27017:27017 mongo:7
-     docker run -d --name redis -p 6379:6379 redis:7
      ```
-2. Configure `backend/.env` with your local MongoDB and Redis settings:
+2. Configure `backend/.env` with your local MongoDB settings:
    ```env
    MONGO_URI=mongodb://localhost:27017
    MONGO_DB=help_me_decide
-   REDIS_HOST=localhost
-   REDIS_PORT=6379
-   REDIS_PASSWORD=
    ```
    *(The `help_me_decide` database and all required indexes are created automatically on first run.)*
 

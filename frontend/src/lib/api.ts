@@ -45,29 +45,16 @@ async function tryRefreshAccessToken(): Promise<string | null> {
     }
 }
 
-export function generateIdempotencyKey(): string {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID();
-    }
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-}
-
 export async function apiRequest<TResponse>(
     endpoint: string,
     options: RequestInit = {},
     retryOn401 = true
 ): Promise<TResponse> {
     const token = getStoredAccessToken();
-    const method = (options.method || 'GET').toUpperCase();
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...((options.headers as Record<string, string>) || {}),
     };
-
-    // Attach Idempotency-Key for mutating requests (and preserve it across 401 refresh retries)
-    if (['POST', 'PUT', 'PATCH'].includes(method) && !headers['Idempotency-Key']) {
-        headers['Idempotency-Key'] = generateIdempotencyKey();
-    }
 
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -82,7 +69,7 @@ export async function apiRequest<TResponse>(
     if (res.status === 401 && retryOn401 && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) {
         const refreshedToken = await tryRefreshAccessToken();
         if (refreshedToken) {
-            return apiRequest<TResponse>(endpoint, { ...options, headers }, false);
+            return apiRequest<TResponse>(endpoint, options, false);
         }
     }
 
