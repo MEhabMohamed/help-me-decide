@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
+import { Request } from 'express';
 import { NotAuthenticated } from './errors';
 import { verfiyAccessToken } from '../../app/auth/utils';
 
@@ -14,15 +14,6 @@ export function extractTokenFromRequest(req: Request): string | undefined {
     return undefined;
 }
 
-export function authenticate(req: Request, _res: Response, next: NextFunction) {
-    const token = extractTokenFromRequest(req);
-    if (!token) {
-        throw NotAuthenticated;
-    }
-    req.user = verfiyAccessToken(token);
-    next();
-}
-
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
@@ -35,4 +26,5 @@ export class JwtAuthGuard implements CanActivate {
         return true;
     }
 }
+
 

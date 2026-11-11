@@ -127,10 +127,11 @@ const CUISINE_AREA_MAP: Record<string, string[]> = {
     turkish: ['Turkish'],
     moroccan: ['Moroccan'],
     tunisian: ['Tunisian'],
-    syrian: ['Syrian', 'Turkish', 'Egyptian'],
-    lebanese: ['Syrian', 'Turkish', 'Egyptian'],
-    saudi: ['Egyptian', 'Tunisian', 'Moroccan'],
-    arabian: ['Egyptian', 'Tunisian', 'Moroccan'],
+    syrian: ['Syrian'],
+    lebanese: ['Lebanese'],
+    saudi: ['Saudi'],
+    algerian: ['Algerian'],
+    arabian: ['Egyptian', 'Tunisian', 'Moroccan', 'Saudi', 'Algerian'],
     british: ['British'],
     thai: ['Thai'],
     vietnamese: ['Vietnamese'],
@@ -172,54 +173,6 @@ function isHaramRecipe(text: string): boolean {
     return false;
 }
 
-function refineArabicTranslation(text: string): string {
-    if (!text) return text;
-    let t = text;
-
-    const replacements: Array<{ bad: RegExp; good: string }> = [
-        { bad: /قرنفل من الثوم/g, good: 'فصوص ثوم' },
-        { bad: /قرنفل الثوم/g, good: 'فصوص ثوم' },
-        { bad: /فصوص من الثوم/g, good: 'فصوص ثوم' },
-        { bad: /فص من الثوم/g, good: 'فص ثوم' },
-        { bad: /بصل ربيعي/g, good: 'بصل أخضر' },
-        { bad: /البصل الربيعي/g, good: 'البصل الأخضر' },
-        { bad: /ما قبل تسخين الفرن/g, good: 'سخن الفرن مسبقاً' },
-        { bad: /سخن الفرن قبل/g, good: 'سخن الفرن مسبقاً' },
-        { bad: /مسحوق الفلفل الحار/g, good: 'شطة حارة' },
-        { bad: /مسحوق شطة/g, good: 'شطة' },
-        { bad: /معجون الطماطم/g, good: 'صلصة الطماطم' },
-        { bad: /معجون طماطم/g, good: 'صلصة طماطم' },
-        { bad: /اللحم المفروم/g, good: 'اللحمة المفرومة' },
-        { bad: /لحم مفروم/g, good: 'لحمة مفرومة' },
-        { bad: /ملعقة طعام/g, good: 'ملعقة كبيرة' },
-        { bad: /ملعقة شاي/g, good: 'ملعقة صغيرة' },
-        { bad: /ملعقة صغيرة من/g, good: 'ملعقة صغيرة' },
-        { bad: /ملعقة كبيرة من/g, good: 'ملعقة كبيرة' },
-        { bad: /قرصة ملح/g, good: 'رشة ملح' },
-        { bad: /كوب من/g, good: 'كوب' },
-        { bad: /كوب دقيق/g, good: 'كوباية دقيق' },
-        { bad: /صدور الدجاج/g, good: 'صدور فراخ' },
-        { bad: /صدر الدجاج/g, good: 'صدر فرخة' },
-        { bad: /قطع الدجاج/g, good: 'قطع الفراخ' },
-        { bad: /الدجاج/g, good: 'الفراخ' },
-        { bad: /دجاج/g, good: 'فراخ' },
-        { bad: /مرق الدجاج/g, good: 'شوربة فراخ' },
-        { bad: /مكعب مرقة دجاج/g, good: 'مكعب مرقة فراخ' },
-        { bad: /أرز/g, good: 'رز' },
-        { bad: /الأرز/g, good: 'الرز' },
-        { bad: /الخبز/g, good: 'العيش' },
-        { bad: /خبز/g, good: 'عيش' },
-        { bad: /طماطم كرزية/g, good: 'طماطم شيري' },
-        { bad: /زيت الزيتون/g, good: 'زيت زيتون' },
-        { bad: /الفلفل الأسود/g, good: 'فلفل أسود' },
-    ];
-
-    for (const item of replacements) {
-        t = t.replace(item.bad, item.good);
-    }
-    return t;
-}
-
 export async function translateText(text: string, targetLang = 'ar'): Promise<string> {
     if (!text || !text.trim()) return text;
     try {
@@ -242,22 +195,9 @@ export async function translateText(text: string, targetLang = 'ar'): Promise<st
         if (!response.ok) return text;
         const data = (await response.json()) as unknown[][][];
         if (data && data[0]) {
-            let translatedText = data[0]
+            return data[0]
                 .map((item) => (item && item[0] ? String(item[0]) : ''))
                 .join('');
-
-            if (targetLang === 'ar') {
-                if (
-                    text.toLowerCase().includes('koshari') ||
-                    text.toLowerCase().includes('koshary')
-                ) {
-                    translatedText = translatedText
-                        .replace(/الحظيرة/g, 'كشري')
-                        .replace(/كوشاري/g, 'كشري');
-                }
-                translatedText = refineArabicTranslation(translatedText);
-            }
-            return translatedText;
         }
         return text;
     } catch {
@@ -328,7 +268,7 @@ interface MealDbSummary {
 
 @Injectable()
 export class CookingService {
-    constructor(@Inject(MealHistoryRepository) private readonly historyRepo: MealHistoryRepository) {}
+    constructor(@Inject(MealHistoryRepository) private readonly historyRepo: MealHistoryRepository) { }
 
     private async buildLocalizedResponse(detailEn: RecipeDetails): Promise<RecommendResponseDTO> {
         const [nameAr, categoryAr, areaAr, instructionsAr, ingredientsAr, measurementsAr] =

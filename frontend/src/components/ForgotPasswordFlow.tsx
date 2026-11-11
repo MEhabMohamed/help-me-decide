@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { translations } from '../translations';
+import { useTranslation } from 'react-i18next';
 import {
     AlertCircle,
     ArrowLeft,
+    Check,
     CheckCircle2,
     Circle,
     Eye,
@@ -60,7 +61,7 @@ export default function ForgotPasswordFlow({
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
-    const t = translations[lang];
+    const { t } = useTranslation();
 
     // PDF Password validation rules (same DTO as Sign Up password)
     const hasMinLength = newPassword.length >= 8;
@@ -68,16 +69,31 @@ export default function ForgotPasswordFlow({
     const hasNumber = /\d/.test(newPassword);
     const hasSpecial = /[^A-Za-z\d]/.test(newPassword);
     const isPasswordValid = hasMinLength && hasLetter && hasNumber && hasSpecial;
-    const passwordsMatch = newPassword.length > 0 && newPassword === confirmPassword;
 
-    const handleSendOtp = async (e: React.FormEvent) => {
+    // Confirm password validation rules & match check
+    const confirmHasMinLength = confirmPassword.length >= 8;
+    const confirmHasLetter = /[A-Za-z]/.test(confirmPassword);
+    const confirmHasNumber = /\d/.test(confirmPassword);
+    const confirmHasSpecial = /[^A-Za-z\d]/.test(confirmPassword);
+    const passwordsMatch =
+        newPassword.length > 0 &&
+        confirmPassword.length > 0 &&
+        newPassword === confirmPassword;
+    const isConfirmPasswordValid =
+        confirmHasMinLength &&
+        confirmHasLetter &&
+        confirmHasNumber &&
+        confirmHasSpecial &&
+        passwordsMatch;
+
+    const handleSendOtp = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setError('');
         setSuccessMsg('');
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
-            setError(t.emailInvalidError);
+            setError(t('emailInvalidError'));
             return;
         }
 
@@ -97,13 +113,13 @@ export default function ForgotPasswordFlow({
         }
     };
 
-    const handleVerifyOtp = async (e: React.FormEvent) => {
+    const handleVerifyOtp = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
         setSuccessMsg('');
 
         if (!/^\d{6}$/.test(otp.trim())) {
-            setError(lang === 'ar' ? 'الكود لازم يكون ٦ أرقام.' : 'OTP must be a 6-digit number.');
+            setError(t('otpFormatError'));
             return;
         }
 
@@ -128,17 +144,17 @@ export default function ForgotPasswordFlow({
         }
     };
 
-    const handleResetPassword = async (e: React.FormEvent) => {
+    const handleResetPassword = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
         setSuccessMsg('');
 
         if (!isPasswordValid) {
-            setError(t.pwdInvalidError);
+            setError(t('pwdInvalidError'));
             return;
         }
         if (!passwordsMatch) {
-            setError(t.passwordsMismatch);
+            setError(t('passwordsMismatch'));
             return;
         }
 
@@ -154,7 +170,7 @@ export default function ForgotPasswordFlow({
                 method: 'POST',
                 body: JSON.stringify(dto),
             });
-            setSuccessMsg(t.resetSuccessMsg);
+            setSuccessMsg(t('resetSuccessMsg'));
             setTimeout(() => {
                 // Clean up URL query params if user arrived via email redirect link
                 if (window.location.search) {
@@ -183,8 +199,8 @@ export default function ForgotPasswordFlow({
                         <Utensils size={20} />
                     </div>
                     <h1 className="brand-text" style={{ fontSize: '1.25rem' }}>
-                        {t.brandFirst}
-                        <span>{t.brandSecond}</span>
+                        {t('brandFirst')}
+                        <span>{t('brandSecond')}</span>
                     </h1>
                 </div>
 
@@ -211,17 +227,17 @@ export default function ForgotPasswordFlow({
             <div className="glass-card auth-card">
                 <h2 className="auth-title">
                     {step === 'email'
-                        ? t.forgotTitle
+                        ? t('forgotTitle')
                         : step === 'verify-otp'
-                          ? t.verifyOtpTitle
-                          : t.resetPasswordTitle}
+                          ? t('verifyOtpTitle')
+                          : t('resetPasswordTitle')}
                 </h2>
                 <p className="auth-subtitle">
                     {step === 'email'
-                        ? t.forgotSub
+                        ? t('forgotSub')
                         : step === 'verify-otp'
-                          ? `${t.verifyOtpSub} (${email})`
-                          : t.resetPasswordSub}
+                          ? `${t('verifyOtpSub')} (${email})`
+                          : t('resetPasswordSub')}
                 </p>
 
                 {error && (
@@ -242,13 +258,13 @@ export default function ForgotPasswordFlow({
                     <form onSubmit={handleSendOtp} noValidate>
                         <div className="form-group">
                             <label className="form-label" htmlFor="reset-email">
-                                {t.emailLabel}
+                                {t('emailLabel')}
                             </label>
                             <input
                                 id="reset-email"
                                 type="email"
                                 className="form-input"
-                                placeholder={t.emailPlaceholder}
+                                placeholder={t('emailPlaceholder')}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -268,7 +284,7 @@ export default function ForgotPasswordFlow({
                             ) : (
                                 <>
                                     <Mail size={18} />
-                                    <span>{t.sendOtpBtn}</span>
+                                    <span>{t('sendOtpBtn')}</span>
                                 </>
                             )}
                         </button>
@@ -279,7 +295,7 @@ export default function ForgotPasswordFlow({
                     <form onSubmit={handleVerifyOtp} noValidate>
                         <div className="form-group">
                             <label className="form-label" htmlFor="verify-email">
-                                {t.emailLabel}
+                                {t('emailLabel')}
                             </label>
                             <input
                                 id="verify-email"
@@ -293,7 +309,7 @@ export default function ForgotPasswordFlow({
 
                         <div className="form-group">
                             <label className="form-label" htmlFor="verify-otp-input">
-                                {t.otpLabel}
+                                {t('otpLabel')}
                             </label>
                             <input
                                 id="verify-otp-input"
@@ -307,7 +323,7 @@ export default function ForgotPasswordFlow({
                                     fontWeight: 700,
                                     textAlign: 'center',
                                 }}
-                                placeholder={t.otpPlaceholder}
+                                placeholder={t('otpPlaceholder')}
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                 required
@@ -327,7 +343,7 @@ export default function ForgotPasswordFlow({
                             ) : (
                                 <>
                                     <ShieldCheck size={18} />
-                                    <span>{t.verifyOtpBtn}</span>
+                                    <span>{t('verifyOtpBtn')}</span>
                                 </>
                             )}
                         </button>
@@ -339,7 +355,7 @@ export default function ForgotPasswordFlow({
                                 onClick={handleSendOtp}
                                 disabled={loading}
                             >
-                                {t.resendOtpBtn}
+                                {t('resendOtpBtn')}
                             </button>
                         </div>
                     </form>
@@ -349,14 +365,20 @@ export default function ForgotPasswordFlow({
                     <form onSubmit={handleResetPassword} noValidate>
                         <div className="form-group">
                             <label className="form-label" htmlFor="new-password">
-                                {t.newPasswordLabel}
+                                {t('newPasswordLabel')}
                             </label>
                             <div className="password-input-wrapper">
                                 <input
                                     id="new-password"
                                     type={showNewPassword ? 'text' : 'password'}
-                                    className="form-input"
-                                    placeholder={t.newPasswordPlaceholder}
+                                    className={`form-input ${
+                                        newPassword.length > 0
+                                            ? isPasswordValid
+                                                ? 'input-valid'
+                                                : 'input-invalid'
+                                            : ''
+                                    }`}
+                                    placeholder={t('newPasswordPlaceholder')}
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     required
@@ -366,61 +388,99 @@ export default function ForgotPasswordFlow({
                                     className="password-toggle-btn"
                                     onClick={() => setShowNewPassword(!showNewPassword)}
                                     aria-label={
-                                        showNewPassword ? t.hidePassword : t.showPassword
+                                        showNewPassword ? t('hidePassword') : t('showPassword')
                                     }
-                                    title={showNewPassword ? t.hidePassword : t.showPassword}
+                                    title={showNewPassword ? t('hidePassword') : t('showPassword')}
                                 >
                                     {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
 
                             <div className="pwd-checklist">
-                                <div className="pwd-checklist-title">{t.pwdReqTitle}</div>
-                                <div className={`pwd-check-item ${hasMinLength ? 'met' : ''}`}>
+                                <div className="pwd-checklist-title">{t('pwdReqTitle')}</div>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasMinLength
+                                            ? 'met'
+                                            : newPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
                                     {hasMinLength ? (
-                                        <CheckCircle2 size={14} />
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
                                     ) : (
                                         <Circle size={14} />
                                     )}
-                                    <span>{t.pwdReqLength}</span>
+                                    <span>{t('pwdReqLength')}</span>
                                 </div>
-                                <div className={`pwd-check-item ${hasLetter ? 'met' : ''}`}>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasLetter
+                                            ? 'met'
+                                            : newPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
                                     {hasLetter ? (
-                                        <CheckCircle2 size={14} />
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
                                     ) : (
                                         <Circle size={14} />
                                     )}
-                                    <span>{t.pwdReqLetter}</span>
+                                    <span>{t('pwdReqLetter')}</span>
                                 </div>
-                                <div className={`pwd-check-item ${hasNumber ? 'met' : ''}`}>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasNumber
+                                            ? 'met'
+                                            : newPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
                                     {hasNumber ? (
-                                        <CheckCircle2 size={14} />
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
                                     ) : (
                                         <Circle size={14} />
                                     )}
-                                    <span>{t.pwdReqNumber}</span>
+                                    <span>{t('pwdReqNumber')}</span>
                                 </div>
-                                <div className={`pwd-check-item ${hasSpecial ? 'met' : ''}`}>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasSpecial
+                                            ? 'met'
+                                            : newPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
                                     {hasSpecial ? (
-                                        <CheckCircle2 size={14} />
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
                                     ) : (
                                         <Circle size={14} />
                                     )}
-                                    <span>{t.pwdReqSpecial}</span>
+                                    <span>{t('pwdReqSpecial')}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="form-group">
                             <label className="form-label" htmlFor="confirm-password">
-                                {t.confirmPasswordLabel}
+                                {t('confirmPasswordLabel')}
                             </label>
                             <div className="password-input-wrapper">
                                 <input
                                     id="confirm-password"
                                     type={showConfirmPassword ? 'text' : 'password'}
-                                    className="form-input"
-                                    placeholder={t.confirmPasswordPlaceholder}
+                                    className={`form-input ${
+                                        confirmPassword.length > 0
+                                            ? isConfirmPasswordValid
+                                                ? 'input-valid'
+                                                : 'input-invalid'
+                                            : ''
+                                    }`}
+                                    placeholder={t('confirmPasswordPlaceholder')}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     required
@@ -430,9 +490,9 @@ export default function ForgotPasswordFlow({
                                     className="password-toggle-btn"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                     aria-label={
-                                        showConfirmPassword ? t.hidePassword : t.showPassword
+                                        showConfirmPassword ? t('hidePassword') : t('showPassword')
                                     }
-                                    title={showConfirmPassword ? t.hidePassword : t.showPassword}
+                                    title={showConfirmPassword ? t('hidePassword') : t('showPassword')}
                                 >
                                     {showConfirmPassword ? (
                                         <EyeOff size={18} />
@@ -441,24 +501,91 @@ export default function ForgotPasswordFlow({
                                     )}
                                 </button>
                             </div>
-                            {confirmPassword.length > 0 && (
+                            <div className="pwd-checklist">
+                                <div className="pwd-checklist-title">{t('pwdReqTitle')}</div>
                                 <div
-                                    className={`pwd-check-item ${passwordsMatch ? 'met' : ''}`}
-                                    style={{
-                                        marginTop: '0.45rem',
-                                        color: passwordsMatch ? 'var(--accent-primary)' : '#ef4444',
-                                    }}
+                                    className={`pwd-check-item ${
+                                        confirmHasMinLength
+                                            ? 'met'
+                                            : confirmPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
+                                    {confirmHasMinLength ? (
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
+                                    ) : (
+                                        <Circle size={14} />
+                                    )}
+                                    <span>{t('pwdReqLength')}</span>
+                                </div>
+                                <div
+                                    className={`pwd-check-item ${
+                                        confirmHasLetter
+                                            ? 'met'
+                                            : confirmPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
+                                    {confirmHasLetter ? (
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
+                                    ) : (
+                                        <Circle size={14} />
+                                    )}
+                                    <span>{t('pwdReqLetter')}</span>
+                                </div>
+                                <div
+                                    className={`pwd-check-item ${
+                                        confirmHasNumber
+                                            ? 'met'
+                                            : confirmPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
+                                    {confirmHasNumber ? (
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
+                                    ) : (
+                                        <Circle size={14} />
+                                    )}
+                                    <span>{t('pwdReqNumber')}</span>
+                                </div>
+                                <div
+                                    className={`pwd-check-item ${
+                                        confirmHasSpecial
+                                            ? 'met'
+                                            : confirmPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
+                                    {confirmHasSpecial ? (
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
+                                    ) : (
+                                        <Circle size={14} />
+                                    )}
+                                    <span>{t('pwdReqSpecial')}</span>
+                                </div>
+                                <div
+                                    className={`pwd-check-item ${
+                                        passwordsMatch
+                                            ? 'met'
+                                            : confirmPassword.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
                                 >
                                     {passwordsMatch ? (
-                                        <CheckCircle2 size={14} />
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
                                     ) : (
-                                        <AlertCircle size={14} />
+                                        <Circle size={14} />
                                     )}
                                     <span>
-                                        {passwordsMatch ? t.passwordsMatch : t.passwordsMismatch}
+                                        {passwordsMatch ? t('passwordsMatch') : t('passwordsMismatch')}
                                     </span>
                                 </div>
-                            )}
+                            </div>
                         </div>
 
                         <button
@@ -474,7 +601,7 @@ export default function ForgotPasswordFlow({
                             ) : (
                                 <>
                                     <KeyRound size={18} />
-                                    <span>{t.updatePasswordBtn}</span>
+                                    <span>{t('updatePasswordBtn')}</span>
                                 </>
                             )}
                         </button>
@@ -489,7 +616,7 @@ export default function ForgotPasswordFlow({
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                     >
                         <ArrowLeft size={15} />
-                        <span>{t.backToSignIn}</span>
+                        <span>{t('backToSignIn')}</span>
                     </button>
                 </div>
             </div>

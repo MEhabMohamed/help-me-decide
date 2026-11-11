@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import SignInPortal from './components/SignInPortal';
 import ForgotPasswordFlow, { ResetStep } from './components/ForgotPasswordFlow';
 import QuestionLoop, { QuizAnswers } from './components/QuestionLoop';
 import ResultCard from './components/ResultCard';
 import HistoryLog from './components/HistoryLog';
-import { translations } from './translations';
 import {
     Utensils,
     History,
@@ -34,6 +34,7 @@ import {
 } from './lib/api';
 
 export default function App() {
+    const { t, i18n } = useTranslation();
     const [token, setToken] = useState<string>(getStoredAccessToken());
     const [user, setUser] = useState<UserResponseDTO | null>(null);
     const [lang, setLang] = useState<Language>(
@@ -69,12 +70,13 @@ export default function App() {
         }
     }, []);
 
-    // Apply language & RTL/LTR direction
+    // Apply language & RTL/LTR direction via i18next
     useEffect(() => {
+        void i18n.changeLanguage(lang);
         document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
         document.documentElement.setAttribute('lang', lang);
         localStorage.setItem('lang', lang);
-    }, [lang]);
+    }, [lang, i18n]);
 
     // Apply Dark/Light/System theme mode (system preferred mode as default)
     useEffect(() => {
@@ -131,29 +133,18 @@ export default function App() {
     };
 
     const handleDeleteAccount = async () => {
-        const msg =
-            lang === 'ar'
-                ? 'هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ سيتم مسح جميع بياناتك وسجل وصفاتك بالكامل.'
-                : 'Are you sure you want to delete your account permanently? All your history and account data will be deleted.';
-
-        if (window.confirm(msg)) {
+        if (window.confirm(t('deleteAccountConfirm'))) {
             try {
                 await apiRequest<DeleteUserResponseDTO>('/users/me', {
                     method: 'DELETE',
                 });
-                alert(
-                    lang === 'ar'
-                        ? 'تم حذف الحساب بنجاح.'
-                        : 'Account deleted successfully.'
-                );
+                alert(t('deleteAccountSuccess'));
                 handleLogoutLocal();
             } catch (err) {
                 alert(
                     err instanceof Error
                         ? err.message
-                        : lang === 'ar'
-                          ? 'فشل حذف الحساب.'
-                          : 'Failed to delete account.'
+                        : t('deleteAccountFailed')
                 );
             }
         }
@@ -225,13 +216,11 @@ export default function App() {
         setRecommendationError('');
     };
 
-    const t = translations[lang];
-
     if (authLoading) {
         return (
             <div className="loader-container" style={{ minHeight: '100vh' }}>
                 <div className="spinner"></div>
-                <p style={{ color: 'var(--text-secondary)' }}>{t.sessionVerifying}</p>
+                <p style={{ color: 'var(--text-secondary)' }}>{t('sessionVerifying')}</p>
             </div>
         );
     }
@@ -284,8 +273,8 @@ export default function App() {
                         <Utensils size={24} />
                     </div>
                     <h1 className="brand-text">
-                        {t.brandFirst}
-                        <span>{t.brandSecond}</span>
+                        {t('brandFirst')}
+                        <span>{t('brandSecond')}</span>
                     </h1>
                 </a>
 
@@ -297,10 +286,10 @@ export default function App() {
                         style={{ padding: '0.5rem 0.85rem', fontSize: '0.84rem' }}
                         title={
                             themeMode === 'system'
-                                ? t.themeSystem
+                                ? t('themeSystem')
                                 : themeMode === 'dark'
-                                  ? t.themeDark
-                                  : t.themeLight
+                                    ? t('themeDark')
+                                    : t('themeLight')
                         }
                     >
                         {renderThemeIcon()}
@@ -311,7 +300,7 @@ export default function App() {
                         onClick={toggleCurrency}
                         className="btn btn-secondary"
                         style={{ padding: '0.5rem 0.85rem', fontSize: '0.84rem' }}
-                        title={t.switchCurrencyTitle}
+                        title={t('switchCurrencyTitle')}
                     >
                         <Coins size={15} />
                         <span>{currency === 'USD' ? 'USD ($)' : 'EGP (E£)'}</span>
@@ -349,17 +338,17 @@ export default function App() {
                                 onClick={handleLogout}
                                 className="btn btn-secondary btn-danger"
                                 style={{ padding: '0.5rem 0.75rem' }}
-                                title={t.signOut}
+                                title={t('signOut')}
                             >
                                 <LogOut size={16} />
-                                <span>{t.signOut}</span>
+                                <span>{t('signOut')}</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={handleDeleteAccount}
                                 className="btn btn-secondary btn-danger"
                                 style={{ padding: '0.5rem' }}
-                                title={t.deleteAccount}
+                                title={t('deleteAccount')}
                             >
                                 <Trash2 size={16} />
                             </button>
@@ -371,8 +360,8 @@ export default function App() {
             {/* Mandatory Application Page Welcome Banner per PDF instructions */}
             <section className="welcome-banner animate-slide-in">
                 <div>
-                    <div className="welcome-banner-title">{t.welcomeBannerTitle}</div>
-                    <p className="welcome-banner-sub">{t.welcomeBannerSub}</p>
+                    <div className="welcome-banner-title">{t('welcomeBannerTitle')}</div>
+                    <p className="welcome-banner-sub">{t('welcomeBannerSub')}</p>
                 </div>
                 <div className="badge badge-accent" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
                     <Sparkles size={14} />
@@ -387,7 +376,7 @@ export default function App() {
                     onClick={() => setActiveTab('recommend')}
                 >
                     <Utensils size={18} />
-                    <span>{t.recommendationsTab}</span>
+                    <span>{t('recommendationsTab')}</span>
                 </button>
                 <button
                     type="button"
@@ -395,7 +384,7 @@ export default function App() {
                     onClick={() => setActiveTab('history')}
                 >
                     <History size={18} />
-                    <span>{t.historyTab}</span>
+                    <span>{t('historyTab')}</span>
                 </button>
             </nav>
 
@@ -405,7 +394,7 @@ export default function App() {
                         <div className="loader-container">
                             <div className="spinner"></div>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-                                {t.loadingMatch}
+                                {t('loadingMatch')}
                             </p>
                         </div>
                     ) : recommendationError ? (
@@ -421,7 +410,7 @@ export default function App() {
                                 onClick={handleResetRecommendation}
                                 className="btn btn-primary"
                             >
-                                <span>{t.tryAgain}</span>
+                                <span>{t('tryAgain')}</span>
                             </button>
                         </div>
                     ) : recommendation && quizAnswers ? (
@@ -435,7 +424,6 @@ export default function App() {
                     ) : (
                         <QuestionLoop
                             onComplete={handleQuizComplete}
-                            lang={lang}
                             currency={currency}
                             onToggleCurrency={toggleCurrency}
                         />
@@ -455,7 +443,7 @@ export default function App() {
                 }}
             >
                 <p style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                    {t.madeWith} <Heart size={12} color="#10b981" fill="#10b981" /> {t.inYear}
+                    {t('madeWith')} <Heart size={12} color="#10b981" fill="#10b981" /> {t('inYear')}
                 </p>
             </footer>
         </div>

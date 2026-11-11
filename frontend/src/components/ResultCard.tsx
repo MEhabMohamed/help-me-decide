@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { translations } from '../translations';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Utensils,
     RotateCcw,
@@ -36,7 +36,7 @@ export default function ResultCard({
 }: ResultCardProps) {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
-    const t = translations[lang];
+    const { t } = useTranslation();
 
     const recipe = recommendation.recipe[lang] || recommendation.recipe.en;
     const displayCost =
@@ -57,8 +57,12 @@ export default function ResultCard({
                 recommendationDetails: recommendation,
             };
 
+            const idempotencyKey = `save-history-${recommendation.recipe.en.id}-${quizAnswers.budget.replace(/\s+/g, '')}`;
             await apiRequest<HistoryItemResponseDTO>('/history', {
                 method: 'POST',
+                headers: {
+                    'Idempotency-Key': idempotencyKey,
+                },
                 body: JSON.stringify(dto),
             });
 
@@ -78,7 +82,7 @@ export default function ResultCard({
         <div className="glass-card result-page animate-slide-in">
             <div className="result-header">
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span className="badge badge-accent">{t.cookingFlow}</span>
+                    <span className="badge badge-accent">{t('cookingFlow')}</span>
                     {displayCost && (
                         <span
                             className="badge"
@@ -86,17 +90,17 @@ export default function ResultCard({
                         >
                             <DollarSign size={13} color="var(--accent-primary)" />
                             <span>
-                                {t.estimatedCostLabel}: <strong>{displayCost}</strong>
+                                {t('estimatedCostLabel')}: <strong>{displayCost}</strong>
                             </span>
                         </span>
                     )}
                 </div>
                 <div className="result-meta">
                     <span>
-                        {t.cuisineLabel}: <strong>{recipe.area || quizAnswers.cuisine}</strong>
+                        {t('cuisineLabel')}: <strong>{recipe.area || quizAnswers.cuisine}</strong>
                     </span>
                     <span>
-                        {t.categoryLabel}: <strong>{recipe.category}</strong>
+                        {t('categoryLabel')}: <strong>{recipe.category}</strong>
                     </span>
                 </div>
             </div>
@@ -108,7 +112,7 @@ export default function ResultCard({
                 >
                     <ShieldCheck size={16} />
                     <span>
-                        {t.matchedLabel}:{' '}
+                        {t('matchedLabel')}:{' '}
                         <strong>
                             {quizAnswers.dietaryRestrictions} | {quizAnswers.allergies} |{' '}
                             {quizAnswers.groupType} | {quizAnswers.budget}
@@ -138,7 +142,7 @@ export default function ResultCard({
                                 }}
                             >
                                 <Video size={14} />
-                                <span>{t.videoTutorial}</span>
+                                <span>{t('videoTutorial')}</span>
                             </a>
                         )}
                     </div>
@@ -156,7 +160,7 @@ export default function ResultCard({
                         }}
                     >
                         <ListChecks size={20} color="var(--accent-primary)" />
-                        <span>{t.ingredientsHeader}</span>
+                        <span>{t('ingredientsHeader')}</span>
                     </h3>
                     {recipe.ingredients.map((ing, i) => (
                         <div key={i} className="ing-item">
@@ -169,7 +173,7 @@ export default function ResultCard({
                 <div className="instructions-section">
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Utensils size={20} color="var(--accent-primary)" />
-                        <span>{t.instructionsHeader}</span>
+                        <span>{t('instructionsHeader')}</span>
                     </h3>
                     <p className="instructions-text">{recipe.instructions}</p>
                 </div>
@@ -192,16 +196,16 @@ export default function ResultCard({
                     style={{ padding: '0.88rem 1.75rem', fontSize: '1rem' }}
                 >
                     {saving ? (
-                        <span>{t.savingHistory}</span>
+                        <span>{t('savingHistory')}</span>
                     ) : saved ? (
                         <>
                             <Check size={18} />
-                            <span>{t.savedStartingOver}</span>
+                            <span>{t('savedStartingOver')}</span>
                         </>
                     ) : (
                         <>
                             <RotateCcw size={18} />
-                            <span>{t.saveAndResetBtn}</span>
+                            <span>{t('saveAndResetBtn')}</span>
                         </>
                     )}
                 </button>
@@ -214,7 +218,7 @@ export default function ResultCard({
                     style={{ padding: '0.88rem 1.75rem', fontSize: '1rem' }}
                 >
                     <RotateCcw size={18} />
-                    <span>{t.resetWithoutSaving}</span>
+                    <span>{t('resetWithoutSaving')}</span>
                 </button>
             </div>
         </div>

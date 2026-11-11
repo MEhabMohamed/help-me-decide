@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { translations } from '../translations';
+import { useTranslation } from 'react-i18next';
 import {
     LogIn,
     UserPlus,
@@ -7,7 +7,7 @@ import {
     Loader,
     Eye,
     EyeOff,
-    CheckCircle2,
+    Check,
     Circle,
     Sun,
     Moon,
@@ -65,10 +65,8 @@ export default function SignInPortal({
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const t = translations[lang];
-    const googleClientId =
-        import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-        '52231987269-3tmkj3uu0j8ph8843tnko5qoq994r3eh.apps.googleusercontent.com';
+    const { t } = useTranslation();
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     const [tokenClient, setTokenClient] = useState<{ requestAccessToken: () => void } | null>(
         null
@@ -82,6 +80,7 @@ export default function SignInPortal({
     const isPasswordValid = hasMinLength && hasLetter && hasNumber && hasSpecial;
 
     useEffect(() => {
+        if (!googleClientId) return;
         let timerId: number;
         const initGoogleOAuth = () => {
             if (window.google?.accounts?.oauth2) {
@@ -129,31 +128,27 @@ export default function SignInPortal({
         if (tokenClient) {
             tokenClient.requestAccessToken();
         } else {
-            setError(
-                lang === 'ar'
-                    ? 'جاري تحميل خدمات جوجل، يرجى المحاولة بعد لحظة...'
-                    : 'Google services are loading. Please try again in a moment.'
-            );
+            setError(t('googleLoadingError'));
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
-            setError(t.emailInvalidError);
+            setError(t('emailInvalidError'));
             return;
         }
 
         if (isSignUp) {
             if (name.trim().length < 3) {
-                setError(t.nameMinError);
+                setError(t('nameMinError'));
                 return;
             }
             if (!isPasswordValid) {
-                setError(t.pwdInvalidError);
+                setError(t('pwdInvalidError'));
                 return;
             }
         }
@@ -205,8 +200,8 @@ export default function SignInPortal({
                         <Utensils size={20} />
                     </div>
                     <h1 className="brand-text" style={{ fontSize: '1.25rem' }}>
-                        {t.brandFirst}
-                        <span>{t.brandSecond}</span>
+                        {t('brandFirst')}
+                        <span>{t('brandSecond')}</span>
                     </h1>
                 </div>
 
@@ -218,10 +213,10 @@ export default function SignInPortal({
                         style={{ padding: '0.45rem 0.8rem', fontSize: '0.82rem' }}
                         title={
                             themeMode === 'system'
-                                ? t.themeSystem
+                                ? t('themeSystem')
                                 : themeMode === 'dark'
-                                  ? t.themeDark
-                                  : t.themeLight
+                                  ? t('themeDark')
+                                  : t('themeLight')
                         }
                     >
                         {renderThemeIcon()}
@@ -239,8 +234,8 @@ export default function SignInPortal({
             </div>
 
             <div className="glass-card auth-card">
-                <h2 className="auth-title">{isSignUp ? t.createAccount : t.welcomeBack}</h2>
-                <p className="auth-subtitle">{isSignUp ? t.createAccountSub : t.welcomeSub}</p>
+                <h2 className="auth-title">{isSignUp ? t('createAccount') : t('welcomeBack')}</h2>
+                <p className="auth-subtitle">{isSignUp ? t('createAccountSub') : t('welcomeSub')}</p>
 
                 {error && (
                     <div className="alert-error" role="alert">
@@ -253,13 +248,13 @@ export default function SignInPortal({
                     {isSignUp && (
                         <div className="form-group">
                             <label className="form-label" htmlFor="signup-name">
-                                {t.nameLabel}
+                                {t('nameLabel')}
                             </label>
                             <input
                                 id="signup-name"
                                 type="text"
                                 className="form-input"
-                                placeholder={t.namePlaceholder}
+                                placeholder={t('namePlaceholder')}
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 minLength={3}
@@ -270,13 +265,13 @@ export default function SignInPortal({
 
                     <div className="form-group">
                         <label className="form-label" htmlFor="auth-email">
-                            {t.emailLabel}
+                            {t('emailLabel')}
                         </label>
                         <input
                             id="auth-email"
                             type="email"
                             className="form-input"
-                            placeholder={t.emailPlaceholder}
+                            placeholder={t('emailPlaceholder')}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -286,7 +281,7 @@ export default function SignInPortal({
                     <div className="form-group">
                         <div className="form-label-row">
                             <label className="form-label" htmlFor="auth-password">
-                                {t.passwordLabel}
+                                {t('passwordLabel')}
                             </label>
                             {!isSignUp && (
                                 <button
@@ -295,7 +290,7 @@ export default function SignInPortal({
                                     className="auth-toggle-link"
                                     style={{ fontSize: '0.8rem' }}
                                 >
-                                    {t.forgotPasswordLink}
+                                    {t('forgotPasswordLink')}
                                 </button>
                             )}
                         </div>
@@ -303,8 +298,14 @@ export default function SignInPortal({
                             <input
                                 id="auth-password"
                                 type={showPassword ? 'text' : 'password'}
-                                className="form-input"
-                                placeholder={t.passwordPlaceholder}
+                                className={`form-input ${
+                                    isSignUp && password.length > 0
+                                        ? isPasswordValid
+                                            ? 'input-valid'
+                                            : 'input-invalid'
+                                        : ''
+                                }`}
+                                placeholder={t('passwordPlaceholder')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -313,8 +314,8 @@ export default function SignInPortal({
                                 type="button"
                                 className="password-toggle-btn"
                                 onClick={() => setShowPassword(!showPassword)}
-                                aria-label={showPassword ? t.hidePassword : t.showPassword}
-                                title={showPassword ? t.hidePassword : t.showPassword}
+                                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+                                title={showPassword ? t('hidePassword') : t('showPassword')}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -322,26 +323,58 @@ export default function SignInPortal({
 
                         {isSignUp && (
                             <div className="pwd-checklist">
-                                <div className="pwd-checklist-title">{t.pwdReqTitle}</div>
-                                <div className={`pwd-check-item ${hasMinLength ? 'met' : ''}`}>
+                                <div className="pwd-checklist-title">{t('pwdReqTitle')}</div>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasMinLength
+                                            ? 'met'
+                                            : password.length > 0
+                                              ? 'unmet'
+                                              : ''
+                                    }`}
+                                >
                                     {hasMinLength ? (
-                                        <CheckCircle2 size={14} />
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
                                     ) : (
                                         <Circle size={14} />
                                     )}
-                                    <span>{t.pwdReqLength}</span>
+                                    <span>{t('pwdReqLength')}</span>
                                 </div>
-                                <div className={`pwd-check-item ${hasLetter ? 'met' : ''}`}>
-                                    {hasLetter ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-                                    <span>{t.pwdReqLetter}</span>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasLetter ? 'met' : password.length > 0 ? 'unmet' : ''
+                                    }`}
+                                >
+                                    {hasLetter ? (
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
+                                    ) : (
+                                        <Circle size={14} />
+                                    )}
+                                    <span>{t('pwdReqLetter')}</span>
                                 </div>
-                                <div className={`pwd-check-item ${hasNumber ? 'met' : ''}`}>
-                                    {hasNumber ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-                                    <span>{t.pwdReqNumber}</span>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasNumber ? 'met' : password.length > 0 ? 'unmet' : ''
+                                    }`}
+                                >
+                                    {hasNumber ? (
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
+                                    ) : (
+                                        <Circle size={14} />
+                                    )}
+                                    <span>{t('pwdReqNumber')}</span>
                                 </div>
-                                <div className={`pwd-check-item ${hasSpecial ? 'met' : ''}`}>
-                                    {hasSpecial ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-                                    <span>{t.pwdReqSpecial}</span>
+                                <div
+                                    className={`pwd-check-item ${
+                                        hasSpecial ? 'met' : password.length > 0 ? 'unmet' : ''
+                                    }`}
+                                >
+                                    {hasSpecial ? (
+                                        <Check size={15} strokeWidth={3} className="pwd-tick-icon" />
+                                    ) : (
+                                        <Circle size={14} />
+                                    )}
+                                    <span>{t('pwdReqSpecial')}</span>
                                 </div>
                             </div>
                         )}
@@ -360,18 +393,18 @@ export default function SignInPortal({
                         ) : isSignUp ? (
                             <>
                                 <UserPlus size={18} />
-                                <span>{t.signUpBtn}</span>
+                                <span>{t('signUpBtn')}</span>
                             </>
                         ) : (
                             <>
                                 <LogIn size={18} />
-                                <span>{t.signInBtn}</span>
+                                <span>{t('signInBtn')}</span>
                             </>
                         )}
                     </button>
                 </form>
 
-                <div className="divider">{lang === 'ar' ? 'أو' : 'or'}</div>
+                <div className="divider">{t('orDivider')}</div>
 
                 <div className="google-btn-wrapper">
                     <button
@@ -398,12 +431,12 @@ export default function SignInPortal({
                                 d="M12 23c3.24 0 6-.97 7.9-2.75l-3.7-2.9c-1.1.75-2.5 1.2-4.2 1.2-3 0-5.6-2.56-6.5-5.56l-3.9 3C3.4 20.3 7.3 23 12 23z"
                             />
                         </svg>
-                        <span>{isSignUp ? t.googleSignUp : t.googleSignIn}</span>
+                        <span>{isSignUp ? t('googleSignUp') : t('googleSignIn')}</span>
                     </button>
                 </div>
 
                 <div className="auth-toggle">
-                    {isSignUp ? `${t.alreadyHaveAccount} ` : `${t.dontHaveAccount} `}
+                    {isSignUp ? `${t('alreadyHaveAccount')} ` : `${t('dontHaveAccount')} `}
                     <button
                         type="button"
                         className="auth-toggle-link"
@@ -412,7 +445,7 @@ export default function SignInPortal({
                             setError('');
                         }}
                     >
-                        {isSignUp ? t.toggleSignIn : t.toggleSignUp}
+                        {isSignUp ? t('toggleSignIn') : t('toggleSignUp')}
                     </button>
                 </div>
             </div>

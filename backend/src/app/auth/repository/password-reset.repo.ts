@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Collection, Db, ObjectId, WithId } from 'mongodb';
-import { Collections, MONGO_DB } from '../../../pkg/mongo/mongo.module';
+import { Collections, MONGO_DB } from '../../../lib/mongo/mongo.module';
 import { PasswordReset } from '../entity/password-reset.entity';
 
 export interface PasswordResetDoc {

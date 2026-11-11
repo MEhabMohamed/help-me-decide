@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { translations } from '../translations';
+import { useTranslation } from 'react-i18next';
 import {
     Trash2,
     Calendar,
@@ -27,7 +27,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedItem, setSelectedItem] = useState<HistoryItemResponseDTO | null>(null);
-    const t = translations[lang];
+    const { t } = useTranslation();
 
     useEffect(() => {
         fetchHistory();
@@ -48,7 +48,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
 
     const handleDelete = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (!window.confirm(t.deleteConfirm)) {
+        if (!window.confirm(t('deleteConfirm'))) {
             return;
         }
 
@@ -80,20 +80,20 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
     return (
         <div className="history-page animate-slide-in">
             <div className="history-header">
-                <h2 style={{ fontSize: '1.65rem' }}>{t.savedHeader}</h2>
+                <h2 style={{ fontSize: '1.65rem' }}>{t('savedHeader')}</h2>
             </div>
 
             {loading ? (
                 <div className="loader-container">
                     <div className="spinner"></div>
-                    <p style={{ color: 'var(--text-secondary)' }}>{t.loadingHistory}</p>
+                    <p style={{ color: 'var(--text-secondary)' }}>{t('loadingHistory')}</p>
                 </div>
             ) : error ? (
                 <div className="alert-error">{error}</div>
             ) : history.length === 0 ? (
                 <div className="glass-card no-history">
                     <Utensils size={48} style={{ opacity: 0.25 }} />
-                    <h3>{t.noSavedHeader}</h3>
+                    <h3>{t('noSavedHeader')}</h3>
                     <p
                         style={{
                             maxWidth: '420px',
@@ -101,7 +101,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                             fontSize: '0.95rem',
                         }}
                     >
-                        {t.noSavedDesc}
+                        {t('noSavedDesc')}
                     </p>
                 </div>
             ) : (
@@ -123,7 +123,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                                 onClick={() => setSelectedItem(item)}
                             >
                                 <div className="history-card-header">
-                                    <span className="history-type-badge">{t.cookingFlow}</span>
+                                    <span className="history-type-badge">{t('cookingFlow')}</span>
                                     <button
                                         type="button"
                                         className="delete-btn"
@@ -148,7 +148,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                                         <span>{formatDate(item.createdAt)}</span>
                                     </span>
                                     <span>
-                                        {t.budgetLabel}: <strong>{displayCost}</strong>
+                                        {t('budgetLabel')}: <strong>{displayCost}</strong>
                                     </span>
                                 </div>
                             </div>
@@ -187,12 +187,12 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                                             flexWrap: 'wrap',
                                         }}
                                     >
-                                        <span className="badge badge-accent">{t.cookingFlow}</span>
+                                        <span className="badge badge-accent">{t('cookingFlow')}</span>
                                         <span className="badge">
-                                            {t.cuisineLabel}: {selectedItem.cuisine}
+                                            {t('cuisineLabel')}: {selectedItem.cuisine}
                                         </span>
                                         <span className="badge">
-                                            {t.budgetLabel}: {selectedItem.budget}
+                                            {t('budgetLabel')}: {selectedItem.budget}
                                         </span>
                                     </div>
 
@@ -231,7 +231,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                                                     fontSize: '0.9rem',
                                                 }}
                                             >
-                                                {t.categoryLabel}: {currentRecipe.category}
+                                                {t('categoryLabel')}: {currentRecipe.category}
                                             </p>
                                             {currentRecipe.youtube && (
                                                 <a
@@ -246,7 +246,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                                                     }}
                                                 >
                                                     <Video size={14} color="#ef4444" />
-                                                    <span>{t.watchVideo}</span>
+                                                    <span>{t('watchVideo')}</span>
                                                 </a>
                                             )}
                                         </div>
@@ -272,7 +272,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                                                     size={20}
                                                     color="var(--accent-primary)"
                                                 />
-                                                <span>{t.ingredientsHeader}</span>
+                                                <span>{t('ingredientsHeader')}</span>
                                             </h3>
                                             {currentRecipe.ingredients.map((ing, idx) => (
                                                 <div key={idx} className="ing-item">
@@ -293,7 +293,7 @@ export default function HistoryLog({ lang = 'en', currency = 'USD' }: HistoryLog
                                                 }}
                                             >
                                                 <Utensils size={20} color="var(--accent-primary)" />
-                                                <span>{t.instructionsHeader}</span>
+                                                <span>{t('instructionsHeader')}</span>
                                             </h3>
                                             <p
                                                 className="instructions-text"

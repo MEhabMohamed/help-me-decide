@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MongoModule } from './pkg/mongo/mongo.module';
+import { MongoModule } from './lib/mongo/mongo.module';
 import { UserModule } from './app/user/user.module';
 import { AuthModule } from './app/auth/auth.module';
 import { CookingModule } from './app/cooking/cooking.module';

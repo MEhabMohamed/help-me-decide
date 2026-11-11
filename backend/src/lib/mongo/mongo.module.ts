@@ -1,7 +1,9 @@
 import { Global, Inject, Injectable, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Db, MongoClient } from 'mongodb';
-import { env } from '../../lib/config/env';
-import { logger } from '../../lib/logger/logger';
+import { MongoConnection } from '../../pkg/mongo/client';
+import { toSec } from '../../pkg/utils/times';
+import { env } from '../config/env';
+import { logger } from '../logger/logger';
 
 export const MONGO_CLIENT = 'MONGO_CLIENT';
 export const MONGO_DB = 'MONGO_DB';
@@ -40,7 +42,7 @@ export async function ensureIndexes(db: Db): Promise<void> {
         {
             key: { expires_at: 1 },
             name: 'idx_password_resets_ttl',
-            expireAfterSeconds: 24 * 60 * 60,
+            expireAfterSeconds: toSec.day(1),
         },
     ]);
 
@@ -77,14 +79,8 @@ export class MongoLifecycle implements OnModuleInit, OnModuleDestroy {
         {
             provide: MONGO_CLIENT,
             useFactory: async (): Promise<MongoClient> => {
-                const client = new MongoClient(env.mongo.uri, {
-                    maxPoolSize: 50,
-                    minPoolSize: 5,
-                    connectTimeoutMS: 10000,
-                    serverSelectionTimeoutMS: 10000,
-                });
-                await client.connect();
-                await client.db(env.mongo.dbName).command({ ping: 1 });
+                const connection = new MongoConnection(env.mongo.uri, env.mongo.dbName);
+                const { client } = await connection.connect();
                 logger.info('Pinged your deployment. You successfully connected to MongoDB!', {
                     db: env.mongo.dbName,
                 });

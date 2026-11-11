@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { translations } from '../translations';
+import { useTranslation } from 'react-i18next';
 import {
     Leaf,
     Flower2,
@@ -19,7 +19,7 @@ import {
     Landmark,
     Coins,
 } from 'lucide-react';
-import { CurrencyCode, Language } from '../types/api.dto';
+import { CurrencyCode } from '../types/api.dto';
 
 export interface QuizAnswers {
     dietaryRestrictions: string;
@@ -32,14 +32,12 @@ export interface QuizAnswers {
 
 interface QuestionLoopProps {
     onComplete: (answers: QuizAnswers) => void;
-    lang: Language;
     currency: CurrencyCode;
     onToggleCurrency: () => void;
 }
 
 export default function QuestionLoop({
     onComplete,
-    lang = 'en',
     currency = 'USD',
     onToggleCurrency,
 }: QuestionLoopProps) {
@@ -73,186 +71,186 @@ export default function QuestionLoop({
         cuisine: '',
     });
 
-    const t = translations[lang];
+    const { t } = useTranslation();
 
     const steps = [
         {
             key: 'dietaryRestrictions' as const,
-            question: t.dietaryRestrictions_q,
+            question: t('dietaryRestrictions_q'),
             isMulti: false,
             isInput: false,
             options: [
                 {
                     label: 'Vegetarian',
                     icon: Leaf,
-                    desc: t.Vegetarian_desc,
-                    localizedLabel: t.Vegetarian,
+                    desc: t('Vegetarian_desc'),
+                    localizedLabel: t('Vegetarian'),
                 },
                 {
                     label: 'Vegan',
                     icon: Flower2,
-                    desc: t.Vegan_desc,
-                    localizedLabel: t.Vegan,
+                    desc: t('Vegan_desc'),
+                    localizedLabel: t('Vegan'),
                 },
                 {
                     label: 'Jewish Kosher',
                     icon: ShieldCheck,
-                    desc: t.Kosher_desc,
-                    localizedLabel: t.Kosher,
+                    desc: t('Kosher_desc'),
+                    localizedLabel: t('Kosher'),
                 },
                 {
                     label: 'None',
                     icon: CheckCircle2,
-                    desc: t.None_diet_desc,
-                    localizedLabel: t.None_diet,
+                    desc: t('None_diet_desc'),
+                    localizedLabel: t('None_diet'),
                 },
                 {
                     label: 'Other',
                     icon: Sparkles,
-                    desc: t.Other_diet_desc,
-                    localizedLabel: t.Other_diet,
+                    desc: t('Other_diet_desc'),
+                    localizedLabel: t('Other_diet'),
                 },
             ],
         },
         {
             key: 'allergies' as const,
-            question: t.allergies_q,
+            question: t('allergies_q'),
             isMulti: true,
             isInput: false,
             options: [
                 {
                     label: 'Gluten',
                     icon: Wheat,
-                    desc: t.Gluten_desc,
-                    localizedLabel: t.Gluten,
+                    desc: t('Gluten_desc'),
+                    localizedLabel: t('Gluten'),
                 },
                 {
                     label: 'Seafood',
                     icon: Fish,
-                    desc: t.Seafood_desc,
-                    localizedLabel: t.Seafood,
+                    desc: t('Seafood_desc'),
+                    localizedLabel: t('Seafood'),
                 },
                 {
                     label: 'Nuts',
                     icon: AlertTriangle,
-                    desc: t.Nuts_desc,
-                    localizedLabel: t.Nuts,
+                    desc: t('Nuts_desc'),
+                    localizedLabel: t('Nuts'),
                 },
                 {
                     label: 'Dairy',
                     icon: Milk,
-                    desc: t.Dairy_desc,
-                    localizedLabel: t.Dairy,
+                    desc: t('Dairy_desc'),
+                    localizedLabel: t('Dairy'),
                 },
                 {
                     label: 'None',
                     icon: CheckCircle2,
-                    desc: t.None_allergy_desc,
-                    localizedLabel: t.None_allergy,
+                    desc: t('None_allergy_desc'),
+                    localizedLabel: t('None_allergy'),
                 },
                 {
                     label: 'Other',
                     icon: Sparkles,
-                    desc: t.Other_allergy_desc,
-                    localizedLabel: t.Other_allergy,
+                    desc: t('Other_allergy_desc'),
+                    localizedLabel: t('Other_allergy'),
                 },
             ],
         },
         {
             key: 'cuisine' as const,
-            question: t.cuisine_q,
+            question: t('cuisine_q'),
             isMulti: false,
             isInput: false,
             options: [
                 {
                     label: 'Egyptian',
                     icon: Landmark,
-                    desc: t.Egyptian_desc,
-                    localizedLabel: t.Egyptian,
+                    desc: t('Egyptian_desc'),
+                    localizedLabel: t('Egyptian'),
                 },
                 {
                     label: 'Italian',
                     icon: Pizza,
-                    desc: t.Italian_desc,
-                    localizedLabel: t.Italian,
+                    desc: t('Italian_desc'),
+                    localizedLabel: t('Italian'),
                 },
                 {
                     label: 'Mexican',
                     icon: ChefHat,
-                    desc: t.Mexican_desc,
-                    localizedLabel: t.Mexican,
+                    desc: t('Mexican_desc'),
+                    localizedLabel: t('Mexican'),
                 },
                 {
                     label: 'Chinese',
                     icon: ChefHat,
-                    desc: t.Chinese_desc,
-                    localizedLabel: t.Chinese,
+                    desc: t('Chinese_desc'),
+                    localizedLabel: t('Chinese'),
                 },
                 {
                     label: 'Indian',
                     icon: ChefHat,
-                    desc: t.Indian_desc,
-                    localizedLabel: t.Indian,
+                    desc: t('Indian_desc'),
+                    localizedLabel: t('Indian'),
                 },
                 {
                     label: 'American',
                     icon: ChefHat,
-                    desc: t.American_desc,
-                    localizedLabel: t.American,
+                    desc: t('American_desc'),
+                    localizedLabel: t('American'),
                 },
                 {
                     label: 'Japanese',
                     icon: ChefHat,
-                    desc: t.Japanese_desc,
-                    localizedLabel: t.Japanese,
+                    desc: t('Japanese_desc'),
+                    localizedLabel: t('Japanese'),
                 },
                 {
                     label: 'Mediterranean',
                     icon: ChefHat,
-                    desc: t.Mediterranean_desc,
-                    localizedLabel: t.Mediterranean,
+                    desc: t('Mediterranean_desc'),
+                    localizedLabel: t('Mediterranean'),
                 },
                 {
                     label: 'Any',
                     icon: CheckCircle2,
-                    desc: t.Any_cuisine_desc,
-                    localizedLabel: t.Any_cuisine,
+                    desc: t('Any_cuisine_desc'),
+                    localizedLabel: t('Any_cuisine'),
                 },
                 {
                     label: 'Other',
                     icon: Sparkles,
-                    desc: t.Other_cuisine_desc,
-                    localizedLabel: t.Other_cuisine,
+                    desc: t('Other_cuisine_desc'),
+                    localizedLabel: t('Other_cuisine'),
                 },
             ],
         },
         {
             key: 'groupType' as const,
-            question: t.groupType_q,
+            question: t('groupType_q'),
             isMulti: false,
             isInput: false,
             options: [
                 {
                     label: 'Solo',
                     icon: User,
-                    desc: t.Solo_desc,
-                    localizedLabel: t.Solo,
+                    desc: t('Solo_desc'),
+                    localizedLabel: t('Solo'),
                 },
                 {
                     label: 'Group',
                     icon: Users,
-                    desc: t.Group_desc,
-                    localizedLabel: t.Group,
+                    desc: t('Group_desc'),
+                    localizedLabel: t('Group'),
                 },
             ],
         },
         {
             key: 'budget' as const,
-            question: currency === 'EGP' ? t.budget_q_egp : t.budget_q_usd,
+            question: currency === 'EGP' ? t('budget_q_egp') : t('budget_q_usd'),
             isMulti: false,
             isInput: true,
             placeholder:
-                currency === 'EGP' ? t.budget_placeholder_egp : t.budget_placeholder_usd,
+                currency === 'EGP' ? t('budget_placeholder_egp') : t('budget_placeholder_usd'),
             options: [],
         },
     ];
@@ -430,7 +428,7 @@ export default function QuestionLoop({
         <div className="glass-card quiz-container animate-slide-in">
             <div className="support-notice-banner">
                 <ShieldCheck size={16} />
-                <span>{t.supportNotice}</span>
+                <span>{t('supportNotice')}</span>
             </div>
 
             <div className="quiz-progress">
@@ -441,9 +439,7 @@ export default function QuestionLoop({
             </div>
 
             <div className="quiz-steps-text">
-                {t.questionNum
-                    .replace('{current}', String(currentStep + 1))
-                    .replace('{total}', String(steps.length))}
+                {t('questionNum', { current: currentStep + 1, total: steps.length })}
             </div>
 
             <h2 className="question-text">{currentStepData.question}</h2>
@@ -465,7 +461,7 @@ export default function QuestionLoop({
                             style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
                         >
                             <Coins size={15} />
-                            <span>{t.currencyUSD}</span>
+                            <span>{t('currencyUSD')}</span>
                         </button>
                         <button
                             type="button"
@@ -474,7 +470,7 @@ export default function QuestionLoop({
                             style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
                         >
                             <Coins size={15} />
-                            <span>{t.currencyEGP}</span>
+                            <span>{t('currencyEGP')}</span>
                         </button>
                     </div>
                     <div className="input-with-addon">
@@ -535,16 +531,16 @@ export default function QuestionLoop({
 
                     {isOtherActive(currentStepData.key) && (
                         <div className="custom-input-container animate-slide-in">
-                            <label className="custom-input-label">{t.specifyPreference}</label>
+                            <label className="custom-input-label">{t('specifyPreference')}</label>
                             <input
                                 type="text"
                                 className="custom-field"
                                 placeholder={
                                     currentStepData.key === 'dietaryRestrictions'
-                                        ? t.Other_diet_placeholder
+                                        ? t('Other_diet_placeholder')
                                         : currentStepData.key === 'allergies'
-                                          ? t.Other_allergy_placeholder
-                                          : t.Other_cuisine_placeholder
+                                          ? t('Other_allergy_placeholder')
+                                          : t('Other_cuisine_placeholder')
                                 }
                                 value={customInputs[currentStepData.key] || ''}
                                 onChange={handleCustomInputChange}
@@ -564,7 +560,7 @@ export default function QuestionLoop({
                     style={{ opacity: currentStep === 0 ? 0.35 : 1 }}
                 >
                     <ArrowLeft size={16} />
-                    <span>{t.btnBack}</span>
+                    <span>{t('btnBack')}</span>
                 </button>
 
                 <button
@@ -578,7 +574,7 @@ export default function QuestionLoop({
                     }}
                 >
                     <span>
-                        {currentStep === steps.length - 1 ? t.btnFindRecipe : t.btnContinue}
+                        {currentStep === steps.length - 1 ? t('btnFindRecipe') : t('btnContinue')}
                     </span>
                     <ArrowRight size={16} />
                 </button>

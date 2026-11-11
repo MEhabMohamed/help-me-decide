@@ -1,26 +1,30 @@
 import { config } from 'dotenv';
 import path from 'path';
 import { z } from 'zod';
+import { toSec } from '../../pkg/utils/times';
 
 config({
     path: path.resolve(__dirname, '../../../.env'),
 });
 
 const schema = z.object({
-    PORT: z.string().default('5000'),
-    NODE_ENV: z.string().default('development'),
-    CORS_ORIGIN: z.string().default('http://localhost:5173,http://localhost:3000'),
-    FRONTEND_URL: z.string().default('http://localhost:5173'),
-    MONGO_URI: z.string().default('mongodb://localhost:27017'),
-    MONGO_DB: z.string().default('help_me_decide'),
+    PORT: z.string(),
+    NODE_ENV: z.string(),
+    CORS_ORIGIN: z.string(),
+    FRONTEND_URL: z.string(),
+    MONGO_URI: z.string(),
+    MONGO_DB: z.string(),
+    REDIS_HOST: z.string(),
+    REDIS_PORT: z.string(),
+    REDIS_PASSWORD: z.string().optional().default(''),
     ACCESS_SECRET: z.string(),
     REFRESH_SECRET: z.string(),
-    ACCESS_EXPIRES_IN: z.string().default('3600'),
-    REFRESH_EXPIRES_IN: z.string().default('604800'),
+    ACCESS_EXPIRES_IN: z.string().default(String(toSec.hour(1))),
+    REFRESH_EXPIRES_IN: z.string().default(String(toSec.day(7))),
     EMAIL_USER: z.string(),
     EMAIL_PASS: z.string(),
-    EMAIL_HOST: z.string().default('smtp.gmail.com'),
-    EMAIL_PORT: z.string().default('587'),
+    EMAIL_HOST: z.string(),
+    EMAIL_PORT: z.string(),
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
 });
@@ -34,6 +38,11 @@ export const env = {
     mongo: {
         uri: parsed.MONGO_URI,
         dbName: parsed.MONGO_DB,
+    },
+    redis: {
+        host: parsed.REDIS_HOST,
+        port: Number(parsed.REDIS_PORT),
+        password: parsed.REDIS_PASSWORD,
     },
     jwt: {
         accessSecret: parsed.ACCESS_SECRET,

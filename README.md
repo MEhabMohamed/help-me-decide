@@ -43,8 +43,8 @@ help-me-decide/
 │   ├── .env.example
 │   ├── package.json
 │   ├── src/
-│   │   ├── pkg/              # Mongo connection pool, Nodemailer SMTP, time utils
-│   │   ├── lib/              # Env config, Logger, AppError, errorHandler, AuthGuard, cookies, validateBody
+│   │   ├── pkg/              # App-independent packages: Mongo client, Redis cache (ioredis), Nodemailer SMTP, time utils (toMs/toSec)
+│   │   ├── lib/              # App infrastructure: MongoModule & MongoLifecycle, Redis init, Idempotency, Env, Logger, AuthGuard, cookies
 │   │   └── app/              # Domain modules: auth/, user/, cooking/, health/ (with Request & Response DTOs)
 │   └── play/                 # Internal live DB & E2E endpoint tests (gitignored)
 └── frontend/                 # Vite + React + TypeScript SPA (Port 5173)
@@ -52,9 +52,9 @@ help-me-decide/
     ├── package.json
     └── src/
         ├── components/       # SignInPortal, ForgotPasswordFlow, QuestionLoop, ResultCard, HistoryLog
+        ├── i18n/             # i18next + react-i18next configuration & JSON locale files (en.json, ar.json)
         ├── lib/              # Typed API client with automatic token refresh
-        ├── types/            # Frontend Request & Response DTO interfaces
-        └── translations.ts   # English & Egyptian Arabic UI dictionary
+        └── types/            # Frontend Request & Response DTO interfaces
 ```
 
 ---
@@ -74,23 +74,26 @@ Or if installing packages manually from scratch:
 
 ```bash
 # Production Dependencies
-npm install @nestjs/common @nestjs/core @nestjs/platform-express bcrypt cookie-parser cors dotenv helmet jsonwebtoken mongodb nodemailer reflect-metadata rxjs zod
+npm install @nestjs/common @nestjs/core @nestjs/platform-express bcrypt class-transformer class-validator cookie-parser cors dotenv express helmet ioredis jsonwebtoken mongodb nodemailer reflect-metadata rxjs uuid zod
 
 # Development & Type Dependencies
-npm install -D @types/bcrypt @types/cookie-parser @types/cors @types/express @types/jsonwebtoken @types/node @types/nodemailer tsx typescript
+npm install -D @types/bcrypt @types/cookie-parser @types/cors @types/express @types/jsonwebtoken @types/node @types/nodemailer ts-node tsx typescript
 ```
 
 | Package | Purpose |
 | :--- | :--- |
-| `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express` | Core NestJS framework, decorators, guards, DI container, and Express HTTP adapter |
+| `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express`, `express`, `reflect-metadata`, `rxjs` | Core NestJS framework, decorators, guards, DI container, and Express HTTP adapter |
 | `mongodb` | Official MongoDB Node.js driver (connection pooling, ping check, idempotent index creation) |
+| `ioredis` | Redis client for caching and HTTP `Idempotency-Key` request deduplication |
 | `bcrypt` | Password hashing and verification (`SALT_ROUNDS = 10`) |
 | `jsonwebtoken` | Signing and verifying JWT Access (`ACCESS_SECRET`) and Refresh (`REFRESH_SECRET`) tokens |
-| `zod` | Runtime Request DTO schema validation (`validateBody` helper) |
+| `class-validator`, `class-transformer` | Request DTO validation decorators (`@IsEmail`, `@MinLength`, `@IsPdfCompliantPassword`, etc.) and class transformation |
+| `zod` | Runtime environment variable schema validation (`env.ts`) |
+| `uuid` | Generating `X-Correlation-Id` request tracing UUIDs |
 | `nodemailer` | Sending HTML password-reset OTP emails via Gmail SMTP |
 | `helmet`, `cors`, `cookie-parser` | Security headers, Cross-Origin Resource Sharing with credentials, and `httpOnly` cookie parsing |
 | `dotenv` | Loading environment variables from `.env` |
-| `tsx`, `typescript` | TypeScript compiler and runner for development and E2E testing |
+| `tsx`, `ts-node`, `typescript` | TypeScript compiler and runner for development and E2E testing |
 
 ---
 
@@ -107,7 +110,7 @@ Or if installing packages manually from scratch:
 
 ```bash
 # Production Dependencies
-npm install react react-dom lucide-react
+npm install react react-dom i18next react-i18next lucide-react
 
 # Development & Build Dependencies
 npm install -D @types/react @types/react-dom @vitejs/plugin-react typescript vite
@@ -115,8 +118,9 @@ npm install -D @types/react @types/react-dom @vitejs/plugin-react typescript vit
 
 | Package | Purpose |
 | :--- | :--- |
-| `react`, `react-dom` | Core React 18 UI library |
-| `lucide-react` | Icons for the questionnaire tiles, password eye toggles, currency switcher, and theme controls |
+| `react`, `react-dom` | Core React 19 UI library |
+| `i18next`, `react-i18next` | Internationalization (`i18n`) framework for English (`en`, LTR) and Egyptian Arabic (`ar`, RTL) |
+| `lucide-react` | Icons for the questionnaire tiles, password eye toggles, green checklist ticks, currency switcher, and theme controls |
 | `vite`, `@vitejs/plugin-react` | Lightning-fast frontend dev server (Port `5173`) and production bundler |
 | `typescript` | Static type checking across all frontend components and DTOs |
 
@@ -133,17 +137,21 @@ cp frontend/.env.example frontend/.env
 
 Below is the step-by-step guide to obtaining each credential from its official provider:
 
-### 1. Local MongoDB Configuration (`MONGO_URI`, `MONGO_DB`)
-1. Ensure a local **MongoDB Community Server** (or Docker container) is running on `mongodb://localhost:27017`:
-   - **Windows / macOS / Linux Service**: Ensure the local `mongod` service is started and listening on port `27017`.
+### 1. Local MongoDB & Redis Configuration (`MONGO_URI`, `MONGO_DB`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`)
+1. Ensure a local **MongoDB Community Server** (`mongodb://localhost:27017`) and **Redis Server** (`localhost:6379`) are running:
+   - **Windows / macOS / Linux Service**: Ensure your local `mongod` (`27017`) and `redis-server` (`6379`) services are started.
    - **Or via Docker**:
      ```bash
      docker run -d --name mongodb -p 27017:27017 mongo:7
+     docker run -d --name redis -p 6379:6379 redis:7
      ```
-2. Configure `backend/.env` with your local server URI and database name (no cloud username/password credentials required):
+2. Configure `backend/.env` with your local MongoDB and Redis settings:
    ```env
    MONGO_URI=mongodb://localhost:27017
    MONGO_DB=help_me_decide
+   REDIS_HOST=localhost
+   REDIS_PORT=6379
+   REDIS_PASSWORD=
    ```
    *(The `help_me_decide` database and all required indexes are created automatically on first run.)*
 
@@ -226,22 +234,6 @@ npm run dev
 ```
 
 Open `http://localhost:5173` in your browser.
-
----
-
-## Running Internal Live Tests (`play/`)
-
-All test scripts live inside `backend/play/` (and `play/`, ignored by Git via `.gitignore`) and run against the real MongoDB database and live TheMealDB API (no mock data):
-
-```bash
-cd backend
-
-# 1. Test local MongoDB connection & index creation
-npm run test:db
-
-# 2. Run the full E2E endpoint suite (Sign Up, Sign In, 3-step Reset Password with OTP, Cooking Recommender in USD & EGP, History CRUD, Logout, and Cleanup)
-npm run test:e2e
-```
 
 ---
 

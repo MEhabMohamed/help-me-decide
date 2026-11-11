@@ -34,11 +34,6 @@ export interface LoginRequestDTO {
     password: string;
 }
 
-export interface GoogleAuthRequestDTO {
-    accessToken?: string;
-    idToken?: string;
-}
-
 export interface ForgotPasswordRequestDTO {
     email: string;
 }
